@@ -55,10 +55,10 @@ class MainActivity : ComponentActivity() {
                                 onLogout = {
                                     isAuthenticated = false
                                     showLogin = true
-                                    authViewModel.loginState = null
+                                    authViewModel.logout()
                                 },
                                 modifier = Modifier.padding(innerPadding),
-                                username = username
+                                username = authViewModel.currentUsername
                             )
                         }
                         else -> {

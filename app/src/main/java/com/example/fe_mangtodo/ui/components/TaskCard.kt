@@ -21,19 +21,19 @@ fun TaskCard(
 ) {
     val (backgroundColor, statusText, statusColor) = when (status.lowercase()) {
         "done" -> Triple(
-            Color(0xFFE8F5E9),  // Light green background
+            Color(0xFFE8F5E9),
             "Completed",
-            Color(0xFF2E7D32)    // Dark green text
+            Color(0xFF2E7D32)
         )
         "pending" -> Triple(
-            Color(0xFFFFF8E1),   // Light yellow background
+            Color(0xFFFFF8E1),
             "In Progress",
-            Color(0xFFF9A825)    // Dark yellow text
+            Color(0xFFF9A825)
         )
         else -> Triple(
-            Color(0xFFFFEBEE),   // Light red background
+            Color(0xFFFFEBEE),
             "Overdue",
-            Color(0xFFD32F2F)    // Dark red text
+            Color(0xFFD32F2F)
         )
     }
 

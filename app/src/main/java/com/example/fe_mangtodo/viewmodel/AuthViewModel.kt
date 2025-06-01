@@ -16,11 +16,16 @@ class AuthViewModel : ViewModel() {
     var loginState by mutableStateOf<Result<LoginResponse>?>(null)
     var registerState by mutableStateOf<Result<RegisterResponse>?>(null)
 
+    private var _currentUsername by mutableStateOf<String?>(null)
+    val currentUsername: String get() = _currentUsername ?: "User"
+
     fun login(email: String, password: String) {
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.api.login(LoginRequest(email, password))
                 loginState = Result.success(response)
+                //Store Username
+                _currentUsername = response.data.user.name
             } catch (e: Exception) {
                 loginState = Result.failure(e)
             }
@@ -32,9 +37,16 @@ class AuthViewModel : ViewModel() {
             try {
                 val response = RetrofitClient.api.register(RegisterRequest(name, email, password))
                 registerState = Result.success(response)
+                //Store username
+                _currentUsername = name
             } catch (e: Exception) {
                 registerState = Result.failure(e)
             }
         }
+    }
+
+    fun logout() {
+        loginState = null
+        _currentUsername = null
     }
 }
