@@ -31,7 +31,7 @@ fun TodoAppScreen(
     onProfileClick: () -> Unit,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier,
-    username: String = "user"
+    username: String
 ) {
     val currentDate = remember {
         LocalDate.now().format(
@@ -40,9 +40,9 @@ fun TodoAppScreen(
     }
 
     val sampleTasks = listOf(
-        TaskItem("Study", "School", "Pending"),
-        TaskItem("Read Book", "Self Dev", "Pending"),
-        TaskItem("Finish App", "Work", "Done")
+        TaskItem("Study", "School", "pending"),
+        TaskItem("Read Book", "Self Dev", "pending"),
+        TaskItem("Finish App", "Work", "done")
     )
 
     Scaffold(
@@ -56,6 +56,7 @@ fun TodoAppScreen(
                 BottomNavigationBar(
                     onHomeClick = {},
                     onProfileClick = onProfileClick,
+                    onAddClick = onAddTask,
                     modifier = Modifier.align(Alignment.BottomCenter)
                 )
             }

@@ -1,9 +1,11 @@
 package com.example.fe_mangtodo
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -16,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.fe_mangtodo.ui.screen.AddTaskScreen
 import com.example.fe_mangtodo.ui.screen.LoginScreen
 import com.example.fe_mangtodo.ui.screen.RegisterScreen
 import com.example.fe_mangtodo.ui.screen.TodoAppScreen
@@ -23,6 +26,7 @@ import com.example.fe_mangtodo.ui.theme.FEMangTodoTheme
 import com.example.fe_mangtodo.viewmodel.AuthViewModel
 
 class MainActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -30,41 +34,56 @@ class MainActivity : ComponentActivity() {
             FEMangTodoTheme {
                 var showLogin by remember { mutableStateOf(true) }
                 var isAuthenticated by remember { mutableStateOf(false) }
+                var showAddTask by remember { mutableStateOf(false) }
                 val authViewModel = remember { AuthViewModel() }
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    if (isAuthenticated) {
-                        TodoAppScreen(
-                            onAddTask = { /* Implement add task logic */ },
-                            onProfileClick = { /* Implement profile click logic */ },
-                            onLogout = {
-                                isAuthenticated = false
-                                showLogin = true
-                            },
-                            modifier = Modifier.padding(innerPadding)  // Use innerPadding here
-                        )
-                    } else {
-                        if (showLogin) {
-                            LoginScreen(
-                                viewModel = authViewModel,
-                                onSuccess = { isAuthenticated = true }
+                    when {
+                        showAddTask -> {
+                            AddTaskScreen(
+                                onNavigateBack = { showAddTask = false },
+                                onTaskAdded = { showAddTask = false }
                             )
-                            Button(
-                                onClick = { showLogin = false },
-                                modifier = Modifier.padding(16.dp)
-                            ) {
-                                Text("Go to Register")
-                            }
-                        } else {
-                            RegisterScreen(
-                                viewModel = authViewModel,
-                                onRegistered = { isAuthenticated = true }
+                        }
+                        isAuthenticated -> {
+                            // Get username from loginState
+                            val username = authViewModel.loginState?.getOrNull()?.data?.user?.name ?: "User"
+                            println(username)
+                            TodoAppScreen(
+                                onAddTask = { showAddTask = true },
+                                onProfileClick = {/* Nav to profile screen */},
+                                onLogout = {
+                                    isAuthenticated = false
+                                    showLogin = true
+                                    authViewModel.loginState = null
+                                },
+                                modifier = Modifier.padding(innerPadding),
+                                username = username
                             )
-                            Button(
-                                onClick = { showLogin = true },
-                                modifier = Modifier.padding(16.dp)
-                            ) {
-                                Text("Back to Login")
+                        }
+                        else -> {
+                            if (showLogin) {
+                                LoginScreen(
+                                    viewModel = authViewModel,
+                                    onSuccess = { isAuthenticated = true }
+                                )
+                                Button(
+                                    onClick = { showLogin = false },
+                                    modifier = Modifier.padding(16.dp)
+                                ) {
+                                    Text("Go to Register")
+                                }
+                            } else {
+                                RegisterScreen(
+                                    viewModel = authViewModel,
+                                    onRegistered = { isAuthenticated = true }
+                                )
+                                Button(
+                                    onClick = { showLogin = true },
+                                    modifier = Modifier.padding(16.dp)
+                                ) {
+                                    Text("Back to Login")
+                                }
                             }
                         }
                     }

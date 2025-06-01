@@ -19,9 +19,27 @@ fun TaskCard(
     status: String,
     modifier: Modifier = Modifier
 ) {
+    val (backgroundColor, statusText, statusColor) = when (status.lowercase()) {
+        "done" -> Triple(
+            Color(0xFFE8F5E9),  // Light green background
+            "Completed",
+            Color(0xFF2E7D32)    // Dark green text
+        )
+        "pending" -> Triple(
+            Color(0xFFFFF8E1),   // Light yellow background
+            "In Progress",
+            Color(0xFFF9A825)    // Dark yellow text
+        )
+        else -> Triple(
+            Color(0xFFFFEBEE),   // Light red background
+            "Overdue",
+            Color(0xFFD32F2F)    // Dark red text
+        )
+    }
+
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFE6E6EC)),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -41,12 +59,19 @@ fun TaskCard(
                 Text(
                     text = subtitle,
                     fontSize = 12.sp,
-                    color = Color.Gray
+                    color = Color.DarkGray
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Due Tomorrow",  // You can make this dynamic later
+                    fontSize = 12.sp,
+                    color = Color.Gray,
+                    fontWeight = FontWeight.Medium
                 )
             }
             Text(
-                text = status,
-                color = Color.Red,
+                text = statusText,
+                color = statusColor,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold
             )

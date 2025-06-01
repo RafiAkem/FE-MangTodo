@@ -77,6 +77,8 @@ fun LoginScreen(viewModel: AuthViewModel, onSuccess: () -> Unit) {
         Spacer(modifier = Modifier.height(16.dp))
         when {
             loginState?.isSuccess == true -> {
+                val username = loginState.getOrNull()?.data?.user?.name ?: "User"
+                Text("Login berhasil sebagai $username", color = Color.Green)
                 LaunchedEffect(Unit) { onSuccess() }
             }
             loginState?.isFailure == true -> {
