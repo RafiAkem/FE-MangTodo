@@ -34,10 +34,15 @@ class MainActivity : ComponentActivity() {
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     if (isAuthenticated) {
-                        TodoAppScreen(onLogout = {
-                            isAuthenticated = false
-                            showLogin = true
-                        })
+                        TodoAppScreen(
+                            onAddTask = { /* Implement add task logic */ },
+                            onProfileClick = { /* Implement profile click logic */ },
+                            onLogout = {
+                                isAuthenticated = false
+                                showLogin = true
+                            },
+                            modifier = Modifier.padding(innerPadding)  // Use innerPadding here
+                        )
                     } else {
                         if (showLogin) {
                             LoginScreen(
@@ -68,4 +73,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
