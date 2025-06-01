@@ -21,7 +21,7 @@ fun TaskCard(
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFE6E6EC)), // Light gray
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFE6E6EC)),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {

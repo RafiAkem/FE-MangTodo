@@ -1,5 +1,7 @@
 package com.example.fe_mangtodo.ui.components
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,10 +13,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
+@RequiresApi(value = 26)
 @Composable
 fun DateSelector() {
-    val dates = listOf("10" to "Mon", "11" to "Tue", "12" to "Wed", "13" to "Thu")
+    val today = LocalDate.now()
+    val dates = (0..3).map { offset ->
+        today.plusDays(offset.toLong())
+    }
     var selectedIndex by remember { mutableStateOf(0) }
 
     Row(
@@ -23,7 +32,7 @@ fun DateSelector() {
             .fillMaxWidth()
             .padding(vertical = 12.dp)
     ) {
-        dates.forEachIndexed { index, pair ->
+        dates.forEachIndexed { index, date ->
             val isSelected = selectedIndex == index
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -36,12 +45,12 @@ fun DateSelector() {
                     .weight(1f)
             ) {
                 Text(
-                    text = pair.first,
+                    text = date.dayOfMonth.toString(),
                     fontSize = 16.sp,
                     color = if (isSelected) Color.White else Color.Black
                 )
                 Text(
-                    text = pair.second,
+                    text = date.format(DateTimeFormatter.ofPattern("E", Locale.ENGLISH)),
                     fontSize = 12.sp,
                     color = if (isSelected) Color.White else Color.Black
                 )

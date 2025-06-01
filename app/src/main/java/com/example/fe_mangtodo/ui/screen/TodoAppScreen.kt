@@ -1,5 +1,8 @@
 package com.example.fe_mangtodo.ui.screen
 
+import BottomNavigationBar
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -7,20 +10,35 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.fe_mangtodo.ui.components.BottomNavigationBar
 import com.example.fe_mangtodo.ui.components.DateSelector
 import com.example.fe_mangtodo.ui.components.TaskItem
 import com.example.fe_mangtodo.ui.components.TaskList
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.fe_mangtodo.ui.theme.FEMangTodoTheme
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
+@RequiresApi(value = 26)
 @Composable
 fun TodoAppScreen(
     onAddTask: () -> Unit,
     onProfileClick: () -> Unit,
     onLogout: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    username: String = "user"
 ) {
+    val currentDate = remember {
+        LocalDate.now().format(
+            DateTimeFormatter.ofPattern("MMM, yyyy", Locale.ENGLISH)
+        )
+    }
+
     val sampleTasks = listOf(
         TaskItem("Study", "School", "Pending"),
         TaskItem("Read Book", "Self Dev", "Pending"),
@@ -29,18 +47,18 @@ fun TodoAppScreen(
 
     Scaffold(
         modifier = modifier,
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddTask,
-                shape = CircleShape,
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Task")
-            }
-        },
-        floatingActionButtonPosition = FabPosition.Center,
         bottomBar = {
-            BottomNavigationBar(onProfileClick = onProfileClick)
+            Box(
+                modifier = Modifier
+                    .height(80.dp)
+                    .fillMaxWidth()
+            ) {
+                BottomNavigationBar(
+                    onHomeClick = {},
+                    onProfileClick = onProfileClick,
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                )
+            }
         }
     ) { innerPadding ->
         Column(
@@ -49,8 +67,19 @@ fun TodoAppScreen(
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp)
         ) {
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = "MangTodo",
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "What are we going to do today, $username?",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Oct, 2020", style = MaterialTheme.typography.titleLarge)
+            Text(currentDate, style = MaterialTheme.typography.titleLarge)
 
             DateSelector()
 
@@ -60,5 +89,20 @@ fun TodoAppScreen(
             Spacer(modifier = Modifier.height(8.dp))
             TaskList(tasks = sampleTasks)
         }
+    }
+}
+
+@RequiresApi(value = 26)
+@Preview(showBackground = true)
+@Composable
+fun TodoAppScreenPreview() {
+    FEMangTodoTheme {
+        TodoAppScreen(
+            onAddTask = {},
+            onProfileClick = {},
+            onLogout = {},
+            modifier = Modifier.fillMaxSize(),
+            username = "Akem"
+        )
     }
 }
