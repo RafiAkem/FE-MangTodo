@@ -24,6 +24,9 @@ fun ProfileScreen(
     onNavigateBack: () -> Unit = {},
     onSaveProfile: (String, String) -> Unit = { _, _ -> },
     onLogout: () -> Unit = {},
+    onHomeClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
+    onAddClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var newUsername by remember { mutableStateOf(username) }
@@ -38,6 +41,13 @@ fun ProfileScreen(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 }
+            )
+        },
+        bottomBar = {
+            BottomNavigationBar(
+                onHomeClick = onHomeClick,
+                onProfileClick = onProfileClick,
+                onAddClick = onAddClick
             )
         }
     ) { padding ->
@@ -66,7 +76,7 @@ fun ProfileScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(32.dp)) // Ganti dari Spacer.weight
+            Spacer(modifier = Modifier.height(32.dp))
 
             Button(
                 onClick = {
