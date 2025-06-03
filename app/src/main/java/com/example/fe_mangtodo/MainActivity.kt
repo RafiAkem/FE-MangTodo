@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.fe_mangtodo.ui.screen.AddTaskScreen
+import com.example.fe_mangtodo.ui.screen.ProfileScreen
 import com.example.fe_mangtodo.ui.screen.LoginScreen
 import com.example.fe_mangtodo.ui.screen.RegisterScreen
 import com.example.fe_mangtodo.ui.screen.TodoAppScreen
@@ -36,6 +37,7 @@ class MainActivity : ComponentActivity() {
                 var isAuthenticated by remember { mutableStateOf(false) }
                 var showAddTask by remember { mutableStateOf(false) }
                 val authViewModel = remember { AuthViewModel() }
+                var showProfile by remember { mutableStateOf(false) }
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     when {
@@ -45,13 +47,28 @@ class MainActivity : ComponentActivity() {
                                 onTaskAdded = { showAddTask = false }
                             )
                         }
+                        showProfile -> {
+                            ProfileScreen(
+                                username = authViewModel.currentUsername,
+                                onNavigateBack = { showProfile = false },
+                                onLogout = {
+                                    isAuthenticated = false
+                                    showLogin = true
+                                    authViewModel.logout()
+                                },
+                                onHomeClick = { showProfile = false },
+                                onProfileClick = {},
+                                onAddClick = {
+                                    showProfile = false
+                                    showAddTask = true
+                                }
+                            )
+                        }
                         isAuthenticated -> {
-                            // Get username from loginState
                             val username = authViewModel.loginState?.getOrNull()?.data?.user?.name ?: "User"
-                            println(username)
                             TodoAppScreen(
                                 onAddTask = { showAddTask = true },
-                                onProfileClick = {/* Nav to profile screen */},
+                                onProfileClick = { showProfile = true },
                                 onLogout = {
                                     isAuthenticated = false
                                     showLogin = true

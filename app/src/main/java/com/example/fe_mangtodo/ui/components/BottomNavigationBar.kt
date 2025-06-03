@@ -38,14 +38,14 @@ fun BottomNavigationBar(
             ) {
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                    selected = true,
+                    selected = false,
                     onClick = onHomeClick,
                     label = { Text("Home") }
                 )
                 Spacer(modifier = Modifier.width(64.dp)) // Space for FAB
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-                    selected = false,
+                    selected = true,
                     onClick = onProfileClick,
                     label = { Text("Profile") }
                 )
