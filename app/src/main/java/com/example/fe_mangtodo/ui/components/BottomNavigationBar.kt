@@ -15,6 +15,7 @@ fun BottomNavigationBar(
     onHomeClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
     onAddClick: () -> Unit = {},
+    isProfileSelected: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -38,14 +39,14 @@ fun BottomNavigationBar(
             ) {
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                    selected = true,
+                    selected = !isProfileSelected,
                     onClick = onHomeClick,
                     label = { Text("Home") }
                 )
                 Spacer(modifier = Modifier.width(64.dp)) // Space for FAB
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Person, contentDescription = "Profile") },
-                    selected = false,
+                    selected = isProfileSelected,
                     onClick = onProfileClick,
                     label = { Text("Profile") }
                 )

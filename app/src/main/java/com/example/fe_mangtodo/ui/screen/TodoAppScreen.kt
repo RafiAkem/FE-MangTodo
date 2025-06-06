@@ -57,6 +57,7 @@ fun TodoAppScreen(
                     onHomeClick = {},
                     onProfileClick = onProfileClick,
                     onAddClick = onAddTask,
+                    isProfileSelected = false,
                     modifier = Modifier.align(Alignment.BottomCenter)
                 )
             }
