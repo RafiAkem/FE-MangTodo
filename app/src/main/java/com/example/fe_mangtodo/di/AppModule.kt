@@ -9,6 +9,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Singleton
+import com.example.fe_mangtodo.data.local.AppDatabase
+import com.example.fe_mangtodo.data.local.DatabaseProvider
 
 @Module
 @InstallIn(SingletonComponent::class)

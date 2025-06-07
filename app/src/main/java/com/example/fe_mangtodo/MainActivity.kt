@@ -19,6 +19,7 @@ import com.example.fe_mangtodo.ui.screen.*
 import com.example.fe_mangtodo.ui.theme.FEMangTodoTheme
 import com.example.fe_mangtodo.viewmodel.AuthViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.example.fe_mangtodo.viewmodel.TaskViewModel
 
 
 class MainActivity : ComponentActivity() {
