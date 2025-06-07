@@ -6,6 +6,18 @@ plugins {
     id("dagger.hilt.android.plugin")
 }
 
+kapt {
+    correctErrorTypes = true
+    arguments {
+        arg("room.schemaLocation", "$projectDir/schemas")
+        arg("dagger.hilt.android.internal.disableAndroidSuperclassValidation", "true")
+        arg("dagger.hilt.android.internal.projectType", "APPLICATION")
+        arg("dagger.hilt.internal.useAggregatingRootProcessor", "false")
+    }
+}
+
+
+
 android {
     namespace = "com.example.fe_mangtodo"
     compileSdk = 35
@@ -73,13 +85,13 @@ dependencies {
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
     // lifecycle
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     //jetpack compose
     implementation ("androidx.activity:activity-compose:1.8.2")
-    implementation ("androidx.compose.ui:ui:1.6.3")
-    implementation ("androidx.compose.material3:material3:1.2.1")
-    implementation ("androidx.compose.material3:material3:1.0.1")
+
+
+
 
 
     // Dagger Hilt
@@ -89,8 +101,11 @@ dependencies {
 
 
     // ViewModel
-    implementation ("androidx.hilt:hilt-lifecycle-viewmodel:1.0.0-alpha03")
     implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
-    kapt ("androidx.hilt:hilt-compiler:1.0.0")
+
+
+    // Jika menggunakan Jetpack ViewModel & Hilt
+    implementation ("androidx.activity:activity-ktx:1.9.0")
+    implementation ("androidx.fragment:fragment-ktx:1.7.0")
 }
 
