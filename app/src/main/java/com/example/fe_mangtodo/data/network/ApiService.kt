@@ -4,7 +4,8 @@ import com.example.fe_mangtodo.data.model.LoginRequest
 import com.example.fe_mangtodo.data.model.LoginResponse
 import com.example.fe_mangtodo.data.model.RegisterRequest
 import com.example.fe_mangtodo.data.model.RegisterResponse
-import com.example.fe_mangtodo.data.model.Task
+import com.example.fe_mangtodo.data.model.TaskRequest
+import com.example.fe_mangtodo.data.model.TaskResponse
 import retrofit2.http.Body
 import retrofit2.http.POST
 
@@ -16,6 +17,6 @@ interface ApiService {
     suspend fun register(@Body request: RegisterRequest): RegisterResponse
 
     @POST("tasks")
-    suspend fun createTask(@Body task: Task): Task
+    suspend fun createTask(@Body taskRequest: TaskRequest): TaskResponse
 }
 

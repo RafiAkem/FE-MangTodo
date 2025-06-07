@@ -7,7 +7,8 @@ data class LoginResponse(
 )
 
 data class LoginData(
-    val user: User
+    val user: User,
+    val token: String
 )
 
 data class User(
