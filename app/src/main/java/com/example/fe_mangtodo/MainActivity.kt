@@ -8,23 +8,18 @@ import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.Button
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.fe_mangtodo.ui.screen.AddTaskScreen
-import com.example.fe_mangtodo.ui.screen.LoginScreen
-import com.example.fe_mangtodo.ui.screen.ProfileScreen
-import com.example.fe_mangtodo.ui.screen.RegisterScreen
-import com.example.fe_mangtodo.ui.screen.TodoAppScreen
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.fe_mangtodo.ui.screen.*
 import com.example.fe_mangtodo.ui.theme.FEMangTodoTheme
 import com.example.fe_mangtodo.viewmodel.AuthViewModel
+import androidx.lifecycle.ViewModelProvider
+
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
@@ -37,7 +32,14 @@ class MainActivity : ComponentActivity() {
                 var isAuthenticated by remember { mutableStateOf(false) }
                 var showAddTask by remember { mutableStateOf(false) }
                 var showProfile by remember { mutableStateOf(false) }
+
                 val authViewModel = remember { AuthViewModel() }
+                // Mendapatkan ViewModel via Compose
+                val taskViewModel: TaskViewModel = viewModel(
+                )
+
+
+
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     when {
@@ -46,7 +48,7 @@ class MainActivity : ComponentActivity() {
                                 username = authViewModel.currentUsername,
                                 onNavigateBack = { showProfile = false },
                                 onHomeClick = { showProfile = false },
-                                onProfileClick = { /* Already on profile */ },
+                                onProfileClick = { /* tetap di sini */ },
                                 onAddClick = {
                                     showProfile = false
                                     showAddTask = true
@@ -62,7 +64,9 @@ class MainActivity : ComponentActivity() {
                         showAddTask -> {
                             AddTaskScreen(
                                 onNavigateBack = { showAddTask = false },
-                                onTaskAdded = { showAddTask = false }
+                                onTaskAdded = { showAddTask = false },
+                                viewModel = taskViewModel,
+                                modifier = Modifier.padding(innerPadding)
                             )
                         }
                         isAuthenticated -> {
@@ -84,6 +88,7 @@ class MainActivity : ComponentActivity() {
                                     viewModel = authViewModel,
                                     onSuccess = { isAuthenticated = true }
                                 )
+                                // Pindahkan tombol ini ke bawah LoginScreen supaya UI rapih
                                 Button(
                                     onClick = { showLogin = false },
                                     modifier = Modifier.padding(16.dp)
@@ -109,4 +114,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-

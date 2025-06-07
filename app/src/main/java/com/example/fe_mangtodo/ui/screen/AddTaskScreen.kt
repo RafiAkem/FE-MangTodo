@@ -9,7 +9,6 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -18,9 +17,11 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.TextButton
-import com.example.fe_mangtodo.data.model.Task
+import com.example.fe_mangtodo.data.local.TaskEntity
 import java.time.Instant
 import java.time.ZoneId
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -28,6 +29,7 @@ import java.time.ZoneId
 fun AddTaskScreen(
     onNavigateBack: () -> Unit,
     onTaskAdded: () -> Unit,
+    viewModel: TaskViewModel,
     modifier: Modifier = Modifier
 ) {
     var title by remember { mutableStateOf("") }
@@ -123,14 +125,13 @@ fun AddTaskScreen(
 
             Button(
                 onClick = {
-                    // Create and save task
-                    val task = Task(
+                    val taskEntity = TaskEntity(
                         title = title,
                         description = description,
                         dueDate = dueDate.format(dateFormatter),
                         status = "pending"
                     )
-                    // TODO: Save task
+                    viewModel.insertTask(taskEntity)
                     onTaskAdded()
                 },
                 enabled = title.isNotBlank(),
@@ -141,18 +142,5 @@ fun AddTaskScreen(
                 Text("Add Task")
             }
         }
-    }
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true)
-@Composable
-fun AddTaskScreenPreview() {
-    MaterialTheme {
-        AddTaskScreen(
-            onNavigateBack = {},
-            onTaskAdded = {},
-            modifier = Modifier.fillMaxSize()
-        )
     }
 }

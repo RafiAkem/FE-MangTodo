@@ -45,6 +45,8 @@ fun TodoAppScreen(
         TaskItem("Finish App", "Work", "done")
     )
 
+
+
     Scaffold(
         modifier = modifier,
         bottomBar = {
@@ -91,6 +93,7 @@ fun TodoAppScreen(
             Spacer(modifier = Modifier.height(8.dp))
             TaskList(tasks = sampleTasks)
         }
+
     }
 }
 
@@ -107,4 +110,5 @@ fun TodoAppScreenPreview() {
             username = "Akem"
         )
     }
+
 }

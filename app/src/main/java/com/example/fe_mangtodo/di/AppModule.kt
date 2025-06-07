@@ -2,7 +2,6 @@ package com.example.fe_mangtodo.di
 
 import android.content.Context
 import androidx.room.Room
-import com.example.fe_mangtodo.data.local.AppDatabase
 import com.example.fe_mangtodo.data.local.TaskDao
 import dagger.Module
 import dagger.Provides
