@@ -15,6 +15,7 @@ data class TaskRequest(
     val description: String,
     val dueDate: String,
     val dueTime: String,
+    val categoryId: String,
     val userId: String
 )
 
@@ -25,7 +26,7 @@ data class Task(
     val dueDate: String,
     val dueTime: String,
     val status: String,
+    val categoryId: String,
     val userId: String
 )
-
 

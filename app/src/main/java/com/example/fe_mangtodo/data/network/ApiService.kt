@@ -6,8 +6,13 @@ import com.example.fe_mangtodo.data.model.RegisterRequest
 import com.example.fe_mangtodo.data.model.RegisterResponse
 import com.example.fe_mangtodo.data.model.TaskRequest
 import com.example.fe_mangtodo.data.model.TaskResponse
+import com.example.fe_mangtodo.data.model.CategoryRequest
+import com.example.fe_mangtodo.data.model.CategoryResponse
+import com.example.fe_mangtodo.data.model.CategoriesResponse
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Query
 
 interface ApiService {
     @POST("login")
@@ -18,5 +23,12 @@ interface ApiService {
 
     @POST("tasks")
     suspend fun createTask(@Body taskRequest: TaskRequest): TaskResponse
+
+    @GET("categories")
+    suspend fun getUserCategories(@Query("userId") userId: String): CategoriesResponse
+
+    @POST("categories")
+    suspend fun createCategory(@Body categoryRequest: CategoryRequest): CategoryResponse
 }
+
 
