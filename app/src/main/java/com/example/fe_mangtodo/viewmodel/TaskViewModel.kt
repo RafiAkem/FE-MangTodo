@@ -1,5 +1,7 @@
 package com.example.fe_mangtodo.viewmodel
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -25,6 +27,10 @@ class TaskViewModel : ViewModel() {
     var deleteTaskState by mutableStateOf<Result<Unit>?>(null)
         private set
 
+    var updateTaskState by mutableStateOf<Result<TaskResponse>?>(null)
+        private set
+
+    @RequiresApi(Build.VERSION_CODES.O)
     fun loadUserTasks(userId: String, selectedDate: LocalDate? = null) {
         viewModelScope.launch {
             isLoading = true
@@ -48,6 +54,7 @@ class TaskViewModel : ViewModel() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun createTask(
         title: String,
         description: String,
@@ -69,10 +76,33 @@ class TaskViewModel : ViewModel() {
         }
     }
 
+    fun updateTask(
+        taskId: String,
+        title: String,
+        description: String,
+        dueDate: String,
+        dueTime: String,
+        categoryId: String,
+        userId: String
+    ) {
+        val request = TaskRequest(title, description, dueDate, dueTime, categoryId, userId)
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.api.updateTask(taskId, request)
+                updateTaskState = Result.success(response)
+                // Reload tasks after updating one
+                loadUserTasks(userId)
+            } catch (e: Exception) {
+                println("Error updating task: ${e.message}")
+                updateTaskState = Result.failure(e)
+            }
+        }
+    }
+
     fun deleteTask(taskId: String, userId: String) {
         viewModelScope.launch {
             try {
-                RetrofitClient.api.deleteTask(taskId)
+                RetrofitClient.api.deleteTask(taskId, userId)
                 deleteTaskState = Result.success(Unit)
                 // Reload tasks after deleting one
                 loadUserTasks(userId)
@@ -89,5 +119,9 @@ class TaskViewModel : ViewModel() {
 
     fun resetDeleteTaskState() {
         deleteTaskState = null
+    }
+
+    fun resetUpdateTaskState() {
+        updateTaskState = null
     }
 }

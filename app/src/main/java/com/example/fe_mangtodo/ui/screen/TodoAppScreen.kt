@@ -40,6 +40,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.AlertDialog
+import com.example.fe_mangtodo.data.model.Task
 
 @RequiresApi(value = 26)
 @Composable
@@ -63,6 +64,8 @@ fun TodoAppScreen(
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
     var showDeleteConfirmationDialog by remember { mutableStateOf(false) }
     var taskToDelete by remember { mutableStateOf<TaskItem?>(null) }
+    var showEditTask by remember { mutableStateOf(false) }
+    var taskToEdit by remember { mutableStateOf<Task?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(selectedDate) {
@@ -77,6 +80,18 @@ fun TodoAppScreen(
         }?.onFailure {
             snackbarHostState.showSnackbar("Failed to delete task: ${it.message}")
             taskViewModel.resetDeleteTaskState()
+        }
+    }
+
+    LaunchedEffect(taskViewModel.updateTaskState) {
+        taskViewModel.updateTaskState?.onSuccess {
+            snackbarHostState.showSnackbar("Task updated successfully!")
+            taskViewModel.resetUpdateTaskState()
+            // Reload tasks after successful update
+            taskViewModel.loadUserTasks(userId, selectedDate)
+        }?.onFailure {
+            snackbarHostState.showSnackbar("Failed to update task: ${it.message}")
+            taskViewModel.resetUpdateTaskState()
         }
     }
 
@@ -151,10 +166,13 @@ fun TodoAppScreen(
             } else {
                 TaskList(
                     tasks = tasks,
-                    onEditTask = { task ->
-                        // TODO: Implement navigation to AddTaskScreen for editing
-                        // For now, let's just log the task to be edited
-                        println("Edit Task: ${task.title}")
+                    onEditTask = { taskItem ->
+                        val originalTask = taskViewModel.tasks.find { it.id == taskItem.id }
+                        if (originalTask != null) {
+                            taskViewModel.resetUpdateTaskState()
+                            taskToEdit = originalTask
+                            showEditTask = true
+                        }
                     },
                     onDeleteTask = { task ->
                         taskToDelete = task
@@ -180,6 +198,25 @@ fun TodoAppScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirmationDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
+
+    if (showEditTask && taskToEdit != null) {
+        EditTaskScreen(
+            task = taskToEdit!!,
+            userId = userId,
+            onNavigateBack = {
+                showEditTask = false
+                taskToEdit = null
+                taskViewModel.resetUpdateTaskState()
+            },
+            onTaskUpdated = {
+                if (taskViewModel.updateTaskState?.isSuccess == true) {
+                    showEditTask = false
+                    taskToEdit = null
+                    taskViewModel.resetUpdateTaskState()
+                }
             }
         )
     }

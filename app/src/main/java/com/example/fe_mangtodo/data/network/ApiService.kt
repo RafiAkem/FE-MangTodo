@@ -15,6 +15,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
 import retrofit2.http.DELETE
+import retrofit2.http.PUT
 import retrofit2.http.Path
 
 interface ApiService {
@@ -37,7 +38,10 @@ interface ApiService {
     suspend fun getUserTasks(@Query("userId") userId: String): TasksResponse
 
     @DELETE("tasks/{id}")
-    suspend fun deleteTask(@Path("id") taskId: String): Unit
+    suspend fun deleteTask(@Path("id") taskId: String, @Query("userId") userId: String): Unit
+
+    @PUT("tasks/{id}")
+    suspend fun updateTask(@Path("id") taskId: String, @Body taskRequest: TaskRequest): TaskResponse
 }
 
 
