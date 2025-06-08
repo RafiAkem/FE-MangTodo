@@ -22,6 +22,9 @@ class TaskViewModel : ViewModel() {
     var createTaskState by mutableStateOf<Result<TaskResponse>?>(null)
         private set
 
+    var deleteTaskState by mutableStateOf<Result<Unit>?>(null)
+        private set
+
     fun loadUserTasks(userId: String, selectedDate: LocalDate? = null) {
         viewModelScope.launch {
             isLoading = true
@@ -66,7 +69,25 @@ class TaskViewModel : ViewModel() {
         }
     }
 
+    fun deleteTask(taskId: String, userId: String) {
+        viewModelScope.launch {
+            try {
+                RetrofitClient.api.deleteTask(taskId)
+                deleteTaskState = Result.success(Unit)
+                // Reload tasks after deleting one
+                loadUserTasks(userId)
+            } catch (e: Exception) {
+                println("Error deleting task: ${e.message}")
+                deleteTaskState = Result.failure(e)
+            }
+        }
+    }
+
     fun resetCreateTaskState() {
         createTaskState = null
+    }
+
+    fun resetDeleteTaskState() {
+        deleteTaskState = null
     }
 }

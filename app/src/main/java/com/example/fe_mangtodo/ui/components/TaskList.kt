@@ -1,5 +1,7 @@
 package com.example.fe_mangtodo.ui.components
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,6 +23,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 data class TaskItem(
+    val id: String,
     val title: String,
     val description: String,
     val dueDate: LocalDate,
@@ -29,13 +32,14 @@ data class TaskItem(
     val categoryName: String?
 )
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TaskList(
     tasks: List<TaskItem>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onEditTask: (TaskItem) -> Unit,
+    onDeleteTask: (TaskItem) -> Unit
 ) {
-    var selectedTask by remember { mutableStateOf<TaskItem?>(null) }
-
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -49,44 +53,9 @@ fun TaskList(
                 dueTime = task.dueTime,
                 status = task.status,
                 categoryName = task.categoryName,
-                onClick = { selectedTask = task }
+                onEditClick = { onEditTask(task) },
+                onDeleteClick = { onDeleteTask(task) }
             )
         }
-    }
-
-    selectedTask?.let { task ->
-        val dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.ENGLISH)
-        val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-
-        AlertDialog(
-            onDismissRequest = { selectedTask = null },
-            title = { Text(task.title) },
-            text = {
-                Column {
-                    Text(
-                        text = "Due: ${task.dueDate.format(dateFormatter)} at ${task.dueTime.format(timeFormatter)}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Normal
-                    )
-                    task.categoryName?.let {
-                        Text(
-                            text = "Category: $it",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Normal
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = task.description,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { selectedTask = null }) {
-                    Text("OK")
-                }
-            }
-        )
     }
 }
