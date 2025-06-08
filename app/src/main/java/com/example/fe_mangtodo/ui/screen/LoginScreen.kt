@@ -244,8 +244,13 @@ fun LoginScreen(
                     LaunchedEffect(Unit) { onSuccess() }
                 }
                 loginState?.isFailure == true -> {
+                    val errorMessage = when {
+                        loginState.exceptionOrNull()?.message?.contains("404") == true -> "Email atau password salah"
+                        loginState.exceptionOrNull()?.message?.contains("Connection") == true -> "Koneksi internet terputus"
+                        else -> "Terjadi kesalahan. Silakan coba lagi."
+                    }
                     Text(
-                        "Login gagal: ${loginState.exceptionOrNull()?.message}",
+                        errorMessage,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error
                     )

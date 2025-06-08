@@ -19,9 +19,10 @@ class TaskViewModel : ViewModel() {
         title: String,
         description: String,
         dueDate: String,
+        dueTime: String,
         userId: String
     ) {
-        val request = TaskRequest(title, description, dueDate, userId)
+        val request = TaskRequest(title, description, dueDate, dueTime, userId)
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.api.createTask(request)
@@ -30,5 +31,9 @@ class TaskViewModel : ViewModel() {
                 createTaskState = Result.failure(e)
             }
         }
+    }
+
+    fun resetCreateTaskState() {
+        createTaskState = null
     }
 }

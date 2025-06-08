@@ -22,6 +22,7 @@ import com.example.fe_mangtodo.ui.screen.RegisterScreen
 import com.example.fe_mangtodo.ui.screen.TodoAppScreen
 import com.example.fe_mangtodo.ui.theme.FEMangTodoTheme
 import com.example.fe_mangtodo.viewmodel.AuthViewModel
+import com.example.fe_mangtodo.viewmodel.TaskViewModel
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
@@ -35,6 +36,7 @@ class MainActivity : ComponentActivity() {
                 var showAddTask by remember { mutableStateOf(false) }
                 var showProfile by remember { mutableStateOf(false) }
                 val authViewModel = remember { AuthViewModel() }
+                val taskViewModel = remember { TaskViewModel() }
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     when {
@@ -46,6 +48,7 @@ class MainActivity : ComponentActivity() {
                                 onProfileClick = { /* Already on profile */ },
                                 onAddClick = {
                                     showProfile = false
+                                    taskViewModel.resetCreateTaskState() // Reset state
                                     showAddTask = true
                                 },
                                 onLogout = {
@@ -60,12 +63,16 @@ class MainActivity : ComponentActivity() {
                             AddTaskScreen(
                                 userId = authViewModel.currentUserId ?: "",
                                 onNavigateBack = { showAddTask = false },
-                                onTaskAdded = { showAddTask = false }
+                                onTaskAdded = { showAddTask = false },
+                                taskViewModel = taskViewModel
                             )
                         }
                         isAuthenticated -> {
                             TodoAppScreen(
-                                onAddTask = { showAddTask = true },
+                                onAddTask = {
+                                    taskViewModel.resetCreateTaskState() // Reset state
+                                    showAddTask = true
+                                },
                                 onProfileClick = { showProfile = true },
                                 onLogout = {
                                     isAuthenticated = false
