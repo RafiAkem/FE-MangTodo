@@ -34,9 +34,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 
 @Composable
-fun RegisterScreen(viewModel: AuthViewModel, onRegistered: () -> Unit) {
+fun RegisterScreen(viewModel: AuthViewModel, onRegistered: () -> Unit, onNavigateToLogin: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -59,8 +60,8 @@ fun RegisterScreen(viewModel: AuthViewModel, onRegistered: () -> Unit) {
             Text(
                 text = "MangTodo",
                 style = MaterialTheme.typography.headlineLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 0.5.sp
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 1.sp
                 ),
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(bottom = 8.dp)
@@ -77,12 +78,12 @@ fun RegisterScreen(viewModel: AuthViewModel, onRegistered: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             ),
             elevation = CardDefaults.cardElevation(
-                defaultElevation = 4.dp
+                defaultElevation = 8.dp
             )
         ) {
             Column(
@@ -94,7 +95,7 @@ fun RegisterScreen(viewModel: AuthViewModel, onRegistered: () -> Unit) {
                 Text(
                     "Get Started!",
                     style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.Bold
                     ),
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -105,11 +106,18 @@ fun RegisterScreen(viewModel: AuthViewModel, onRegistered: () -> Unit) {
                     label = { Text("Full Name") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                    )
+                    ),
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(id = android.R.drawable.ic_menu_myplaces),
+                            contentDescription = "Name Icon",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 )
 
                 OutlinedTextField(
@@ -118,11 +126,18 @@ fun RegisterScreen(viewModel: AuthViewModel, onRegistered: () -> Unit) {
                     label = { Text("Email") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                    )
+                    ),
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(id = android.R.drawable.ic_dialog_email),
+                            contentDescription = "Email Icon",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 )
 
                 OutlinedTextField(
@@ -133,11 +148,18 @@ fun RegisterScreen(viewModel: AuthViewModel, onRegistered: () -> Unit) {
                     visualTransformation = if (passwordVisible)
                         VisualTransformation.None else PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline
                     ),
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(id = android.R.drawable.ic_lock_idle_lock),
+                            contentDescription = "Password Icon",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
                     trailingIcon = {
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(
@@ -147,7 +169,8 @@ fun RegisterScreen(viewModel: AuthViewModel, onRegistered: () -> Unit) {
                                     else android.R.drawable.ic_secure
                                 ),
                                 contentDescription = if (passwordVisible)
-                                    "Hide password" else "Show password"
+                                    "Hide password" else "Show password",
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -155,21 +178,53 @@ fun RegisterScreen(viewModel: AuthViewModel, onRegistered: () -> Unit) {
 
                 Button(
                     onClick = { viewModel.register(name, email, password) },
-                    enabled = name.isNotBlank() && email.isNotBlank() && password.isNotBlank(),
+                    enabled = name.isNotBlank() && email.isNotBlank() && password.isNotBlank() && !viewModel.isRegisterLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
-                    Text(
-                        "Register",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.SemiBold
+                    if (viewModel.isRegisterLoading == true) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
+                    } else {
+                        Text(
+                            "Create Account",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                    }
+                }
+
+                // Sign In Link
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Already have an account?",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    TextButton(
+                        onClick = onNavigateToLogin,
+                        modifier = Modifier.padding(start = 4.dp)
+                    ) {
+                        Text(
+                            "Sign In",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             }
         }
@@ -184,15 +239,18 @@ fun RegisterScreen(viewModel: AuthViewModel, onRegistered: () -> Unit) {
             when {
                 registerState?.isSuccess == true -> {
                     Text(
-                        "Registrasi berhasil",
+                        "Registration successful! Please log in with your credentials.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.tertiary
                     )
-                    LaunchedEffect(Unit) { onRegistered() }
+                    LaunchedEffect(Unit) {
+                        delay(2000)
+                        onRegistered()
+                    }
                 }
                 registerState?.isFailure == true -> {
                     Text(
-                        "Register gagal: ${registerState.exceptionOrNull()?.message}",
+                        "Registration failed: ${registerState.exceptionOrNull()?.message}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.error
                     )

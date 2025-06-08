@@ -17,12 +17,11 @@ class TaskViewModel : ViewModel() {
 
     fun createTask(
         title: String,
-        description: String?,
+        description: String,
         dueDate: String,
-        status: String = "pending",
         userId: String
     ) {
-        val request = TaskRequest(title, description, dueDate, status, userId)
+        val request = TaskRequest(title, description, dueDate, userId)
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.api.createTask(request)

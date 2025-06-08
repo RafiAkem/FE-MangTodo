@@ -8,16 +8,19 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -26,6 +29,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,11 +50,16 @@ import com.example.fe_mangtodo.ui.theme.FEMangTodoTheme
 import com.example.fe_mangtodo.viewmodel.AuthViewModel
 
 @Composable
-fun LoginScreen(viewModel: AuthViewModel, onSuccess: () -> Unit) {
+fun LoginScreen(
+    viewModel: AuthViewModel,
+    onSuccess: () -> Unit,
+    onNavigateToRegister: () -> Unit
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     val loginState = viewModel.loginState
+    val isLoginLoading = viewModel.isLoginLoading
 
     Column(
         modifier = Modifier
@@ -86,12 +95,12 @@ fun LoginScreen(viewModel: AuthViewModel, onSuccess: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface
             ),
             elevation = CardDefaults.cardElevation(
-                defaultElevation = 4.dp
+                defaultElevation = 8.dp
             )
         ) {
             Column(
@@ -114,11 +123,18 @@ fun LoginScreen(viewModel: AuthViewModel, onSuccess: () -> Unit) {
                     label = { Text("Email") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                    )
+                    ),
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(id = android.R.drawable.ic_dialog_email),
+                            contentDescription = "Email Icon",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 )
 
                 OutlinedTextField(
@@ -129,11 +145,18 @@ fun LoginScreen(viewModel: AuthViewModel, onSuccess: () -> Unit) {
                     visualTransformation = if (passwordVisible)
                         VisualTransformation.None else PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(16.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline
                     ),
+                    leadingIcon = {
+                        Icon(
+                            painter = painterResource(id = android.R.drawable.ic_lock_idle_lock),
+                            contentDescription = "Password Icon",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
                     trailingIcon = {
                         IconButton(onClick = { passwordVisible = !passwordVisible }) {
                             Icon(
@@ -143,7 +166,8 @@ fun LoginScreen(viewModel: AuthViewModel, onSuccess: () -> Unit) {
                                     else android.R.drawable.ic_secure
                                 ),
                                 contentDescription = if (passwordVisible)
-                                    "Hide password" else "Show password"
+                                    "Hide password" else "Show password",
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -151,21 +175,53 @@ fun LoginScreen(viewModel: AuthViewModel, onSuccess: () -> Unit) {
 
                 Button(
                     onClick = { viewModel.login(email, password) },
-                    enabled = email.isNotBlank() && password.isNotBlank(),
+                    enabled = email.isNotBlank() && password.isNotBlank() && !isLoginLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
-                    Text(
-                        "Login",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.SemiBold
+                    if (isLoginLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
+                    } else {
+                        Text(
+                            "Sign In",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        )
+                    }
+                }
+
+                // Sign Up Link
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Don't have an account?",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    TextButton(
+                        onClick = onNavigateToRegister,
+                        modifier = Modifier.padding(start = 4.dp)
+                    ) {
+                        Text(
+                            "Sign Up",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             }
         }
@@ -207,7 +263,8 @@ fun LoginScreenPreview() {
     FEMangTodoTheme {
         LoginScreen(
             viewModel = previewViewModel,
-            onSuccess = {}
+            onSuccess = {},
+            onNavigateToRegister = {}  // Adding the missing parameter
         )
     }
 }

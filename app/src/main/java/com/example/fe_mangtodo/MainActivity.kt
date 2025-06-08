@@ -8,16 +8,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.example.fe_mangtodo.ui.screen.AddTaskScreen
 import com.example.fe_mangtodo.ui.screen.LoginScreen
 import com.example.fe_mangtodo.ui.screen.ProfileScreen
@@ -61,6 +58,7 @@ class MainActivity : ComponentActivity() {
                         }
                         showAddTask -> {
                             AddTaskScreen(
+                                userId = authViewModel.currentUserId ?: "",
                                 onNavigateBack = { showAddTask = false },
                                 onTaskAdded = { showAddTask = false }
                             )
@@ -82,25 +80,17 @@ class MainActivity : ComponentActivity() {
                             if (showLogin) {
                                 LoginScreen(
                                     viewModel = authViewModel,
-                                    onSuccess = { isAuthenticated = true }
+                                    onSuccess = { isAuthenticated = true },
+                                    onNavigateToRegister = { showLogin = false }
                                 )
-                                Button(
-                                    onClick = { showLogin = false },
-                                    modifier = Modifier.padding(16.dp)
-                                ) {
-                                    Text("Go to Register")
-                                }
                             } else {
                                 RegisterScreen(
                                     viewModel = authViewModel,
-                                    onRegistered = { isAuthenticated = true }
+                                    onRegistered = {
+                                        showLogin = true
+                                    },
+                                    onNavigateToLogin = { showLogin = true }
                                 )
-                                Button(
-                                    onClick = { showLogin = true },
-                                    modifier = Modifier.padding(16.dp)
-                                ) {
-                                    Text("Back to Login")
-                                }
                             }
                         }
                     }
@@ -109,4 +99,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-

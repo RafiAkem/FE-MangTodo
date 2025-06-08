@@ -30,59 +30,48 @@ import androidx.compose.material3.SnackbarHost
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AddTaskScreen(
-    onNavigateBack: () -> Unit, //buat balik ke screen
-    onTaskAdded: () -> Unit, //callback pas task
+    onNavigateBack: () -> Unit,
+    onTaskAdded: () -> Unit,
     userId: String,
     modifier: Modifier = Modifier,
-    taskViewModel: TaskViewModel = viewModel() //buat akses fungsi createtask
+    taskViewModel: TaskViewModel = viewModel()
 ) {
-    //save user input
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    var dueDate by remember { mutableStateOf(LocalDate.now()) } //default tgl hari ini
-    var showDatePicker by remember { mutableStateOf(false) } //kalau tgl diklik
-    val dateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy") //format tgl yg ditampilin
+    var dueDate by remember { mutableStateOf(LocalDate.now()) }
+    var showDatePicker by remember { mutableStateOf(false) }
 
-    //ambil state hasil create task
-    val createTaskState = taskViewModel.createTaskState
-    //state snackbar, bwt nampilin pesan ke user
+    val displayDateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
+    val apiDateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
     val snackbarHostState = remember { SnackbarHostState() }
+    val createTaskState = taskViewModel.createTaskState
 
-    //efeksamping createtaskstate
     LaunchedEffect(createTaskState) {
         createTaskState?.onSuccess {
-            //kalo berhasil, tampilin snackbar dan panggil onTaskAdded()
-            snackbarHostState.showSnackbar("Task '${it.task.title}' berhasil dibuat!")
+            snackbarHostState.showSnackbar("Task created successfully!")
             onTaskAdded()
         }?.onFailure {
-            //kalo gagal, tampilin snackbar error
-            snackbarHostState.showSnackbar("Gagal membuat task: ${it.message}")
+            snackbarHostState.showSnackbar("Failed to create task: ${it.message}")
         }
     }
 
-    // Date Picker Dialog kalo true
     if (showDatePicker) {
-        //State untuk date picker, tanggal yang dipilih default
         val datePickerState = rememberDatePickerState(
             initialSelectedDateMillis = dueDate.atStartOfDay(ZoneId.systemDefault())
                 .toInstant().toEpochMilli()
         )
 
-        //dialog date picker
         DatePickerDialog(
-            onDismissRequest = { showDatePicker = false }, //tutup dialog klo mncet yg lain
+            onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
-                    //ambil tgl yg dipilih trs set ke due date
                     datePickerState.selectedDateMillis?.let { millis ->
                         dueDate = Instant.ofEpochMilli(millis)
                             .atZone(ZoneId.systemDefault())
                             .toLocalDate()
                     }
-                    showDatePicker = false //tutup
-                }) {
-                    Text("OK")
-                }
+                    showDatePicker = false
+                }) { Text("OK") }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
@@ -134,30 +123,28 @@ fun AddTaskScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
-                onClick = { showDatePicker = true },
+            // Due Date Selector
+            OutlinedTextField(
+                value = dueDate.format(displayDateFormatter),
+                onValueChange = {},
+                label = { Text("Due Date") },
+                readOnly = true,
+                trailingIcon = {
+                    IconButton(onClick = { showDatePicker = true }) {
+                        Icon(Icons.Default.DateRange, "Select Date")
+                    }
+                },
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    Icons.Default.DateRange,
-                    contentDescription = "Select Date",
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Due Date: ${dueDate.format(dateFormatter)}")
-            }
+            )
 
             Spacer(modifier = Modifier.weight(1f))
 
-            //button buat create task
             Button(
                 onClick = {
-                    //panggil fungsi di createtask
                     taskViewModel.createTask(
                         title = title,
                         description = description,
-                        dueDate = dueDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                        status = "pending",
+                        dueDate = dueDate.format(apiDateFormatter),
                         userId = userId
                     )
                 },
@@ -166,7 +153,7 @@ fun AddTaskScreen(
                     .fillMaxWidth()
                     .height(56.dp)
             ) {
-                Text("Add Task")
+                Text("Create Task")
             }
         }
     }
@@ -182,3 +169,4 @@ fun AddTaskScreenPreview() {
         userId = "9aa6e445-d490-4793-b263-fa933217d24"
     )
 }
+
