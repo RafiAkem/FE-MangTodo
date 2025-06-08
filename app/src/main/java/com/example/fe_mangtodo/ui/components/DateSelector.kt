@@ -3,6 +3,7 @@ package com.example.fe_mangtodo.ui.components
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -19,12 +20,19 @@ import java.util.Locale
 
 @RequiresApi(value = 26)
 @Composable
-fun DateSelector() {
+fun DateSelector(
+    onDateSelected: (LocalDate?) -> Unit
+) {
     val today = LocalDate.now()
     val dates = (0..3).map { offset ->
         today.plusDays(offset.toLong())
     }
+    val displayDates = listOf<LocalDate?>(null) + dates
     var selectedIndex by remember { mutableStateOf(0) }
+
+    LaunchedEffect(Unit) { // Initialize with "All" selected
+        onDateSelected(displayDates[0])
+    }
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -32,8 +40,11 @@ fun DateSelector() {
             .fillMaxWidth()
             .padding(vertical = 12.dp)
     ) {
-        dates.forEachIndexed { index, date ->
+        displayDates.forEachIndexed { index, date ->
             val isSelected = selectedIndex == index
+            val textForDate = if (date == null) "All" else date.dayOfMonth.toString()
+            val textForDay = if (date == null) "" else date.format(DateTimeFormatter.ofPattern("E", Locale.ENGLISH))
+
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
@@ -43,17 +54,23 @@ fun DateSelector() {
                     )
                     .padding(vertical = 12.dp, horizontal = 16.dp)
                     .weight(1f)
+                    .clickable {
+                        selectedIndex = index
+                        onDateSelected(date)
+                    }
             ) {
                 Text(
-                    text = date.dayOfMonth.toString(),
+                    text = textForDate,
                     fontSize = 16.sp,
                     color = if (isSelected) Color.White else Color.Black
                 )
-                Text(
-                    text = date.format(DateTimeFormatter.ofPattern("E", Locale.ENGLISH)),
-                    fontSize = 12.sp,
-                    color = if (isSelected) Color.White else Color.Black
-                )
+                if (date != null) { // Only show day of week for actual dates
+                    Text(
+                        text = textForDay,
+                        fontSize = 12.sp,
+                        color = if (isSelected) Color.White else Color.Black
+                    )
+                }
             }
         }
     }

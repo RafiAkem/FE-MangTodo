@@ -30,3 +30,9 @@ data class Task(
     val userId: String
 )
 
+data class TasksResponse(
+    val status: String,
+    val message: String,
+    val data: List<Task>
+)
+

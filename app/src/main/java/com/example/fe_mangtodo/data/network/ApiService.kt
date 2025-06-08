@@ -9,6 +9,7 @@ import com.example.fe_mangtodo.data.model.TaskResponse
 import com.example.fe_mangtodo.data.model.CategoryRequest
 import com.example.fe_mangtodo.data.model.CategoryResponse
 import com.example.fe_mangtodo.data.model.CategoriesResponse
+import com.example.fe_mangtodo.data.model.TasksResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -29,6 +30,9 @@ interface ApiService {
 
     @POST("categories")
     suspend fun createCategory(@Body categoryRequest: CategoryRequest): CategoryResponse
+
+    @GET("tasks")
+    suspend fun getUserTasks(@Query("userId") userId: String): TasksResponse
 }
 
 

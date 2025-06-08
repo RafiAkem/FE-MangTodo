@@ -9,8 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -22,7 +21,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.fe_mangtodo.ui.theme.FEMangTodoTheme
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.LocalTime
 import java.util.Locale
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.fe_mangtodo.viewmodel.TaskViewModel
+import com.example.fe_mangtodo.viewmodel.AuthViewModel
+import com.example.fe_mangtodo.viewmodel.CategoryViewModel
 
 @RequiresApi(value = 26)
 @Composable
@@ -31,19 +35,38 @@ fun TodoAppScreen(
     onProfileClick: () -> Unit,
     onLogout: () -> Unit,
     modifier: Modifier = Modifier,
-    username: String
+    username: String,
+    userId: String,
+    taskViewModel: TaskViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel(),
+    categoryViewModel: CategoryViewModel = viewModel()
 ) {
-    val currentDate = remember {
+    val currentDateFormatted = remember {
         LocalDate.now().format(
             DateTimeFormatter.ofPattern("MMM, yyyy", Locale.ENGLISH)
         )
     }
 
-    val sampleTasks = listOf(
-        TaskItem("Study", "School", "pending"),
-        TaskItem("Read Book", "Self Dev", "pending"),
-        TaskItem("Finish App", "Work", "done")
-    )
+    var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
+
+    LaunchedEffect(selectedDate) {
+        taskViewModel.loadUserTasks(userId, selectedDate)
+        categoryViewModel.loadUserCategories(userId)
+    }
+
+    val categories = categoryViewModel.categories
+
+    val tasks = taskViewModel.tasks.map { task ->
+        val categoryName = categories.find { it.id == task.categoryId }?.name
+        TaskItem(
+            title = task.title,
+            description = task.description,
+            dueDate = LocalDate.parse(task.dueDate.substring(0, 10)),
+            dueTime = LocalTime.parse(task.dueTime),
+            status = task.status,
+            categoryName = categoryName
+        )
+    }
 
     Scaffold(
         modifier = modifier,
@@ -81,15 +104,25 @@ fun TodoAppScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(16.dp))
-            Text(currentDate, style = MaterialTheme.typography.titleLarge)
+            Text(currentDateFormatted, style = MaterialTheme.typography.titleLarge)
 
-            DateSelector()
+            DateSelector(onDateSelected = { date -> selectedDate = date })
 
             Spacer(modifier = Modifier.height(16.dp))
             Text("Task", style = MaterialTheme.typography.titleMedium)
 
             Spacer(modifier = Modifier.height(8.dp))
-            TaskList(tasks = sampleTasks)
+            
+            if (taskViewModel.isLoading || categoryViewModel.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                TaskList(tasks = tasks)
+            }
         }
     }
 }
@@ -104,7 +137,8 @@ fun TodoAppScreenPreview() {
             onProfileClick = {},
             onLogout = {},
             modifier = Modifier.fillMaxSize(),
-            username = "Akem"
+            username = "Akem",
+            userId = "preview-user-id"
         )
     }
 }

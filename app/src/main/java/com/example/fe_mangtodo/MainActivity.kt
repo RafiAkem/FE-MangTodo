@@ -70,7 +70,7 @@ class MainActivity : ComponentActivity() {
                         isAuthenticated -> {
                             TodoAppScreen(
                                 onAddTask = {
-                                    taskViewModel.resetCreateTaskState() // Reset state
+                                    taskViewModel.resetCreateTaskState()
                                     showAddTask = true
                                 },
                                 onProfileClick = { showProfile = true },
@@ -79,8 +79,10 @@ class MainActivity : ComponentActivity() {
                                     showLogin = true
                                     authViewModel.logout()
                                 },
-                                modifier = Modifier.padding(innerPadding),
-                                username = authViewModel.currentUsername
+                                username = authViewModel.currentUsername,
+                                userId = authViewModel.currentUserId ?: "",
+                                taskViewModel = taskViewModel,
+                                authViewModel = authViewModel
                             )
                         }
                         else -> {
