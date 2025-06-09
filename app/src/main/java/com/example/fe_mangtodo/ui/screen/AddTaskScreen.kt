@@ -165,7 +165,7 @@ fun AddTaskScreen(
                     .fillMaxWidth()
                     .height(200.dp)
                     .clip(CurvedBottomShape())
-                    .background(Color(0xFF003399)) // Dark Blue
+                    .background(Color(0xFF003399))
             ) {
                 IconButton(
                     onClick = onNavigateBack,
