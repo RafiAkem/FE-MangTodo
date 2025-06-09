@@ -9,12 +9,17 @@ import com.example.fe_mangtodo.data.model.LoginRequest
 import com.example.fe_mangtodo.data.model.LoginResponse
 import com.example.fe_mangtodo.data.model.RegisterRequest
 import com.example.fe_mangtodo.data.model.RegisterResponse
+import com.example.fe_mangtodo.data.model.UpdateUsernameRequest
+import com.example.fe_mangtodo.data.model.UpdatePasswordRequest
 import com.example.fe_mangtodo.data.network.RetrofitClient
 import kotlinx.coroutines.launch
 
 class AuthViewModel : ViewModel() {
     var loginState by mutableStateOf<Result<LoginResponse>?>(null)
     var registerState by mutableStateOf<Result<RegisterResponse>?>(null)
+    var updateUsernameState by mutableStateOf<Result<Unit>?>(null)
+    var updatePasswordState by mutableStateOf<Result<Unit>?>(null)
+    var profileErrorMessage by mutableStateOf<String?>(null)
 
     // Add loading states
     var isLoginLoading by mutableStateOf(false)
@@ -66,5 +71,30 @@ class AuthViewModel : ViewModel() {
 
     fun isUserLoggedIn(): Boolean {
         return _currentUserId != null
+    }
+
+    fun updateUsername(userId: String, newName: String, currentPassword: String) {
+        viewModelScope.launch {
+            try {
+                RetrofitClient.api.updateUsername(userId, UpdateUsernameRequest(newName))
+                updateUsernameState = Result.success(Unit)
+                _currentUsername = newName
+            } catch (e: Exception) {
+                updateUsernameState = Result.failure(e)
+                profileErrorMessage = e.message
+            }
+        }
+    }
+
+    fun updatePassword(userId: String, currentPassword: String, newPassword: String) {
+        viewModelScope.launch {
+            try {
+                RetrofitClient.api.updatePassword(userId, UpdatePasswordRequest(currentPassword, newPassword))
+                updatePasswordState = Result.success(Unit)
+            } catch (e: Exception) {
+                updatePasswordState = Result.failure(e)
+                profileErrorMessage = e.message
+            }
+        }
     }
 }

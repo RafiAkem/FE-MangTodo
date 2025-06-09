@@ -10,6 +10,8 @@ import com.example.fe_mangtodo.data.model.CategoryRequest
 import com.example.fe_mangtodo.data.model.CategoryResponse
 import com.example.fe_mangtodo.data.model.CategoriesResponse
 import com.example.fe_mangtodo.data.model.TasksResponse
+import com.example.fe_mangtodo.data.model.UpdateUsernameRequest
+import com.example.fe_mangtodo.data.model.UpdatePasswordRequest
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -45,6 +47,18 @@ interface ApiService {
 
     @DELETE("categories/{id}")
     suspend fun deleteCategory(@Path("id") categoryId: String, @Query("userId") userId: String): Unit
+
+    @PUT("auth/username")
+    suspend fun updateUsername(
+        @Query("userId") userId: String,
+        @Body request: UpdateUsernameRequest
+    )
+
+    @PUT("auth/password")
+    suspend fun updatePassword(
+        @Query("userId") userId: String,
+        @Body request: UpdatePasswordRequest
+    )
 }
 
 

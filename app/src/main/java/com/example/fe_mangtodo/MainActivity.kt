@@ -59,6 +59,7 @@ class MainActivity : ComponentActivity() {
                         }
                         showProfile -> {
                             ProfileScreen(
+                                viewModel = authViewModel,
                                 username = authViewModel.currentUsername,
                                 onNavigateBack = { showProfile = false },
                                 onHomeClick = { showProfile = false },
