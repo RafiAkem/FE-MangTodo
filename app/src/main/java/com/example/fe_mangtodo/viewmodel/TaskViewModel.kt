@@ -15,6 +15,7 @@ class TaskViewModel @Inject constructor(
     private val repository: TaskRepository
 ) : ViewModel() {
 
+
     val tasks = repository.getAll()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
