@@ -18,10 +18,17 @@ class CategoryViewModel : ViewModel() {
     var createCategoryState by mutableStateOf<Result<CategoryResponse>?>(null)
         private set
 
+    var deleteCategoryState by mutableStateOf<Result<Unit>?>(null)
+        private set
+
     var isLoading by mutableStateOf(false)
         private set
 
     fun loadUserCategories(userId: String) {
+        if (userId.isBlank()) {
+            println("Error: userId is empty")
+            return
+        }
         viewModelScope.launch {
             isLoading = true
             try {
@@ -37,6 +44,10 @@ class CategoryViewModel : ViewModel() {
     }
 
     fun createCategory(name: String, userId: String) {
+        if (userId.isBlank()) {
+            println("Error: userId is empty")
+            return
+        }
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.api.createCategory(CategoryRequest(name, userId))
@@ -50,7 +61,29 @@ class CategoryViewModel : ViewModel() {
         }
     }
 
+    fun deleteCategory(categoryId: String, userId: String) {
+        if (userId.isBlank()) {
+            println("Error: userId is empty")
+            return
+        }
+        viewModelScope.launch {
+            try {
+                RetrofitClient.api.deleteCategory(categoryId, userId)
+                deleteCategoryState = Result.success(Unit)
+                // Reload categories after deleting one
+                loadUserCategories(userId)
+            } catch (e: Exception) {
+                println("Error deleting category: ${e.message}")
+                deleteCategoryState = Result.failure(e)
+            }
+        }
+    }
+
     fun resetCreateCategoryState() {
         createCategoryState = null
+    }
+
+    fun resetDeleteCategoryState() {
+        deleteCategoryState = null
     }
 }

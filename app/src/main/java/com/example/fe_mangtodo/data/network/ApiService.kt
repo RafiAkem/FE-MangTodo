@@ -42,6 +42,9 @@ interface ApiService {
 
     @PUT("tasks/{id}")
     suspend fun updateTask(@Path("id") taskId: String, @Body taskRequest: TaskRequest): TaskResponse
+
+    @DELETE("categories/{id}")
+    suspend fun deleteCategory(@Path("id") categoryId: String, @Query("userId") userId: String): Unit
 }
 
 

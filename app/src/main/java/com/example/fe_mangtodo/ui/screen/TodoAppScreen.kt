@@ -4,12 +4,18 @@ import BottomNavigationBar
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.Icon
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -48,6 +54,7 @@ fun TodoAppScreen(
     onAddTask: () -> Unit,
     onProfileClick: () -> Unit,
     onLogout: () -> Unit,
+    onManageCategories: () -> Unit,
     modifier: Modifier = Modifier,
     username: String,
     userId: String,
@@ -136,17 +143,31 @@ fun TodoAppScreen(
                 .padding(horizontal = 16.dp)
         ) {
             Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = "MangTodo",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "What are we going to do today, $username?",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "MangTodo",
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "What are we going to do today, $username?",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                IconButton(onClick = onManageCategories) {
+                    Icon(
+                        Icons.Default.Menu,
+                        contentDescription = "Manage Categories",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
             Text(currentDateFormatted, style = MaterialTheme.typography.titleLarge)
 
             DateSelector(onDateSelected = { date -> selectedDate = date })
@@ -231,6 +252,7 @@ fun TodoAppScreenPreview() {
             onAddTask = {},
             onProfileClick = {},
             onLogout = {},
+            onManageCategories = {},
             modifier = Modifier.fillMaxSize(),
             username = "Akem",
             userId = "preview-user-id"

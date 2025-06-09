@@ -49,8 +49,7 @@ class AuthViewModel : ViewModel() {
             try {
                 val response = RetrofitClient.api.register(RegisterRequest(name, email, password))
                 registerState = Result.success(response)
-                //Store username
-                _currentUsername = name
+                login(email, password)
             } catch (e: Exception) {
                 registerState = Result.failure(e)
             } finally {
@@ -63,5 +62,9 @@ class AuthViewModel : ViewModel() {
         loginState = null
         _currentUsername = null
         _currentUserId = null
+    }
+
+    fun isUserLoggedIn(): Boolean {
+        return _currentUserId != null
     }
 }

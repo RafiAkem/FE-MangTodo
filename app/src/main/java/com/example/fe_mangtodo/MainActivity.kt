@@ -16,12 +16,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.fe_mangtodo.ui.screen.AddTaskScreen
+import com.example.fe_mangtodo.ui.screen.CategoryManagementScreen
 import com.example.fe_mangtodo.ui.screen.LoginScreen
 import com.example.fe_mangtodo.ui.screen.ProfileScreen
 import com.example.fe_mangtodo.ui.screen.RegisterScreen
 import com.example.fe_mangtodo.ui.screen.TodoAppScreen
 import com.example.fe_mangtodo.ui.theme.FEMangTodoTheme
 import com.example.fe_mangtodo.viewmodel.AuthViewModel
+import com.example.fe_mangtodo.viewmodel.CategoryViewModel
 import com.example.fe_mangtodo.viewmodel.TaskViewModel
 
 class MainActivity : ComponentActivity() {
@@ -35,11 +37,26 @@ class MainActivity : ComponentActivity() {
                 var isAuthenticated by remember { mutableStateOf(false) }
                 var showAddTask by remember { mutableStateOf(false) }
                 var showProfile by remember { mutableStateOf(false) }
+                var showCategoryManagement by remember { mutableStateOf(false) }
                 val authViewModel = remember { AuthViewModel() }
                 val taskViewModel = remember { TaskViewModel() }
+                val categoryViewModel = remember { CategoryViewModel() }
 
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     when {
+                        showCategoryManagement -> {
+                            val userId = authViewModel.currentUserId
+                            if (userId != null) {
+                                CategoryManagementScreen(
+                                    onNavigateBack = { showCategoryManagement = false },
+                                    userId = userId,
+                                    categoryViewModel = categoryViewModel
+                                )
+                            } else {
+                                // If userId is null, go back to main screen
+                                showCategoryManagement = false
+                            }
+                        }
                         showProfile -> {
                             ProfileScreen(
                                 username = authViewModel.currentUsername,
@@ -64,7 +81,8 @@ class MainActivity : ComponentActivity() {
                                 userId = authViewModel.currentUserId ?: "",
                                 onNavigateBack = { showAddTask = false },
                                 onTaskAdded = { showAddTask = false },
-                                taskViewModel = taskViewModel
+                                taskViewModel = taskViewModel,
+                                categoryViewModel = categoryViewModel
                             )
                         }
                         isAuthenticated -> {
@@ -79,10 +97,12 @@ class MainActivity : ComponentActivity() {
                                     showLogin = true
                                     authViewModel.logout()
                                 },
+                                onManageCategories = { showCategoryManagement = true },
                                 username = authViewModel.currentUsername,
                                 userId = authViewModel.currentUserId ?: "",
                                 taskViewModel = taskViewModel,
-                                authViewModel = authViewModel
+                                authViewModel = authViewModel,
+                                categoryViewModel = categoryViewModel
                             )
                         }
                         else -> {
