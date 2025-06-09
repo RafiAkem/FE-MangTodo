@@ -196,4 +196,3 @@ fun ProfileScreenPreview() {
         ProfileScreen(username = "Akem")
     }
 }
-
