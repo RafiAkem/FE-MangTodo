@@ -1,6 +1,7 @@
 package com.example.fe_mangtodo.viewmodel
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,19 +11,20 @@ import androidx.lifecycle.viewModelScope
 import com.example.fe_mangtodo.data.model.Task
 import com.example.fe_mangtodo.data.model.TaskRequest
 import com.example.fe_mangtodo.data.model.TaskResponse
-import com.example.fe_mangtodo.data.network.ApiService
-import com.example.fe_mangtodo.data.network.RetrofitClient
+import com.example.fe_mangtodo.data.model.TaskData
 import com.example.fe_mangtodo.data.repository.TaskRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
 class TaskViewModel @Inject constructor(
-    private val apiService: ApiService,
     private val repository: TaskRepository
 ): ViewModel() {
+    private val TAG = "TaskViewModel"
+
     var tasks by mutableStateOf<List<Task>>(emptyList())
         private set
 
@@ -43,20 +45,26 @@ class TaskViewModel @Inject constructor(
         viewModelScope.launch {
             isLoading = true
             try {
-                val response = RetrofitClient.api.getUserTasks(userId)
-                val allTasks = response.data
-
-                tasks = if (selectedDate != null) {
-                    allTasks.filter { task ->
-                        LocalDate.parse(task.dueDate.substring(0, 10)) == selectedDate
+                Log.d(TAG, "Loading user tasks for user: $userId and date: $selectedDate")
+                // First sync with remote
+                repository.syncTasks(userId)
+                
+                // Then observe local data
+                repository.getTasks(userId).collect { allTasks ->
+                    tasks = if (selectedDate != null) {
+                        allTasks.filter { task ->
+                            LocalDate.parse(task.dueDate.substring(0, 10)) == selectedDate
+                        }
+                    } else {
+                        allTasks
                     }
-                } else {
-                    allTasks
+                    Log.d(TAG, "Tasks loaded: ${tasks.size}")
+                    isLoading = false
                 }
             } catch (e: Exception) {
-                println("Error loading tasks: ${e.message}")
+                Log.e(TAG, "Error loading tasks: ${e.message}")
+                Log.e(TAG, "Stack trace: ${e.stackTraceToString()}")
                 tasks = emptyList()
-            } finally {
                 isLoading = false
             }
         }
@@ -70,17 +78,25 @@ class TaskViewModel @Inject constructor(
         dueTime: String,
         categoryId: String,
         userId: String,
-        status: String = "in_progress" // Default status
+        status: String = "in_progress"
     ) {
         val request = TaskRequest(title, description, dueDate, dueTime, categoryId, userId, status)
         viewModelScope.launch {
+            isLoading = true // Set loading to true when creating task
             try {
-                val response = RetrofitClient.api.createTask(request)
-                createTaskState = Result.success(response)
-                // Reload tasks after creating a new one (will reload with current selected date)
-                loadUserTasks(userId)
+                Log.d(TAG, "Attempting to create task with request: $request")
+                val task = repository.createTask(request)
+                createTaskState = Result.success(TaskResponse("success", "Task created", TaskData(task)))
+                Log.d(TAG, "Task created successfully. Reloading tasks.")
+                // Reload tasks after successful creation
+                loadUserTasks(userId, LocalDate.parse(dueDate.substring(0, 10)))
             } catch (e: Exception) {
+                Log.e(TAG, "Error creating task: ${e.message}")
+                Log.e(TAG, "Stack trace: ${e.stackTraceToString()}")
                 createTaskState = Result.failure(e)
+            } finally {
+                isLoading = false // Set loading to false after task creation attempt
+                Log.d(TAG, "isLoading set to false after createTask")
             }
         }
     }
@@ -93,36 +109,45 @@ class TaskViewModel @Inject constructor(
         dueTime: String,
         categoryId: String,
         userId: String,
-        status: String = "in_progress" // Default status
+        status: String = "in_progress"
     ) {
         val request = TaskRequest(title, description, dueDate, dueTime, categoryId, userId, status)
         viewModelScope.launch {
+            isLoading = true // Set loading to true when updating task
             try {
-                val response = RetrofitClient.api.updateTask(taskId, request)
-                updateTaskState = Result.success(response)
-                // Reload tasks after updating one
-                loadUserTasks(userId)
+                val task = repository.updateTask(taskId, request)
+                updateTaskState = Result.success(TaskResponse("success", "Task updated", TaskData(task)))
+                Log.d(TAG, "Task updated successfully. Reloading tasks.")
+                loadUserTasks(userId, LocalDate.parse(dueDate.substring(0, 10)))
             } catch (e: Exception) {
-                println("Error updating task: ${e.message}")
+                Log.e(TAG, "Error updating task: ${e.message}")
+                Log.e(TAG, "Stack trace: ${e.stackTraceToString()}")
                 updateTaskState = Result.failure(e)
+            } finally {
+                isLoading = false // Set loading to false after task update attempt
+                Log.d(TAG, "isLoading set to false after updateTask")
             }
         }
     }
 
     fun deleteTask(taskId: String, userId: String) {
         viewModelScope.launch {
+            isLoading = true // Set loading to true when deleting task
             try {
-                RetrofitClient.api.deleteTask(taskId, userId)
+                repository.deleteTask(taskId, userId)
                 deleteTaskState = Result.success(Unit)
-                // Reload tasks after deleting one
-                loadUserTasks(userId)
+                Log.d(TAG, "Task deleted successfully. Reloading tasks.")
+                loadUserTasks(userId) // Reload all tasks after deletion
             } catch (e: Exception) {
-                println("Error deleting task: ${e.message}")
+                Log.e(TAG, "Error deleting task: ${e.message}")
+                Log.e(TAG, "Stack trace: ${e.stackTraceToString()}")
                 deleteTaskState = Result.failure(e)
+            } finally {
+                isLoading = false // Set loading to false after task deletion attempt
+                Log.d(TAG, "isLoading set to false after deleteTask")
             }
         }
     }
-
 
     fun updateTaskStatus(task: Task, newStatus: String, userId: String) {
         val request = TaskRequest(
@@ -135,12 +160,19 @@ class TaskViewModel @Inject constructor(
             status = newStatus
         )
         viewModelScope.launch {
+            isLoading = true
             try {
-                val response = RetrofitClient.api.updateTask(task.id, request)
-                updateTaskState = Result.success(response)
-                loadUserTasks(userId)
+                val updatedTask = repository.updateTask(task.id, request)
+                updateTaskState = Result.success(TaskResponse("success", "Task status updated", TaskData(updatedTask)))
+                Log.d(TAG, "Task status updated successfully. Reloading tasks.")
+                loadUserTasks(userId, LocalDate.parse(task.dueDate.substring(0, 10)))
             } catch (e: Exception) {
+                Log.e(TAG, "Error updating task status: ${e.message}")
+                Log.e(TAG, "Stack trace: ${e.stackTraceToString()}")
                 updateTaskState = Result.failure(e)
+            } finally {
+                isLoading = false
+                Log.d(TAG, "isLoading set to false after updateTaskStatus")
             }
         }
     }

@@ -1,15 +1,12 @@
 package com.example.fe_mangtodo.di
 
-import android.content.Context
-import androidx.room.Room
-import com.example.fe_mangtodo.data.local.db.AppDatabase
 import com.example.fe_mangtodo.data.local.dao.TaskDao
 import com.example.fe_mangtodo.data.repository.TaskRepository
+import com.example.fe_mangtodo.data.network.ApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Singleton
 
 @Module
@@ -17,20 +14,8 @@ import javax.inject.Singleton
 object AppModule {
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
-        Room.databaseBuilder(
-            context,
-            AppDatabase::class.java,
-            "mangtodo_db"
-        ).build()
-
-    @Provides
-    fun provideTaskDao(db: AppDatabase): TaskDao = db.taskDao()
-
-    @Provides
-    @Singleton
-    fun provideTaskRepository(dao: TaskDao): TaskRepository {
-        return TaskRepository(dao)
+    fun provideTaskRepository(dao: TaskDao, apiService: ApiService): TaskRepository {
+        return TaskRepository(dao, apiService)
     }
 }
 

@@ -11,7 +11,7 @@ data class TaskEntity(
     val dueDate: String,
     val dueTime: String,
     val status: String,
-    val categoryId: String,
+    val categoryId: String?,
     val userId: String
 )
 

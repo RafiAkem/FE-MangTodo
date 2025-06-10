@@ -1,13 +1,15 @@
 package com.example.fe_mangtodo.data.model
 
+import com.google.gson.annotations.SerializedName
+
 data class TaskResponse(
     val status: String,
-    val message: String,
+    val message: String?,
     val data: TaskData
 )
 
 data class TaskData(
-    val task: Task
+    val task: Task?
 )
 
 data class TaskRequest(
@@ -15,7 +17,7 @@ data class TaskRequest(
     val description: String,
     val dueDate: String,
     val dueTime: String,
-    val categoryId: String,
+    val categoryId: String?,
     val userId: String,
     val status: String
 )
@@ -27,7 +29,7 @@ data class Task(
     val dueDate: String,
     val dueTime: String,
     val status: String,
-    val categoryId: String,
+    val categoryId: String?,
     val userId: String
 )
 
