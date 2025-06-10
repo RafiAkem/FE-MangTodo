@@ -42,6 +42,7 @@ fun TaskList(
     } }
     val previousStatuses = remember { mutableStateMapOf<String, String>() }
     var showDialogForTaskId by remember { mutableStateOf<String?>(null) }
+    var showDeleteDialogForTaskId by remember { mutableStateOf<String?>(null) }
 
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
@@ -66,6 +67,7 @@ fun TaskList(
                             previousStatuses[task.id] = status
                             checkedTasks[task.id] = true
                             taskStatuses[task.id] = "complete"
+                            onStatusChange(task, "complete")
                             showDialogForTaskId = null
                         }) { Text("Yes") }
                     },
@@ -74,6 +76,30 @@ fun TaskList(
                             checkedTasks[task.id] = false
                             showDialogForTaskId = null
                         }) { Text("No") }
+                    }
+                )
+            }
+
+            if (showDeleteDialogForTaskId == task.id) {
+                AlertDialog(
+                    onDismissRequest = { 
+                        showDeleteDialogForTaskId = null
+                        visible = true
+                    },
+                    title = { Text("Delete Task") },
+                    text = { Text("Are you sure you want to delete this task?") },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            visible = false
+                            onDeleteTask(task)
+                            showDeleteDialogForTaskId = null
+                        }) { Text("Delete") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { 
+                            showDeleteDialogForTaskId = null
+                            visible = true
+                        }) { Text("Cancel") }
                     }
                 )
             }
@@ -108,8 +134,7 @@ fun TaskList(
                     ),
                     onEditClick = { onEditTask(task) },
                     onDeleteClick = {
-                        visible = false
-                        onDeleteTask(task)
+                        showDeleteDialogForTaskId = task.id
                     },
                     onStatusChange = { newStatus ->
                         if (newStatus == "complete") {

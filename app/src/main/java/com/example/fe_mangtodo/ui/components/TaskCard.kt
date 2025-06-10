@@ -116,8 +116,6 @@ fun TaskCard(
                     checked = checked,
                     onCheckedChange = { isChecked ->
                         onCheckedChange(isChecked)
-                        val newStatus = if (isChecked) "complete" else "in_progress"
-                        onStatusChange(newStatus)
                     }
                 )
             }
