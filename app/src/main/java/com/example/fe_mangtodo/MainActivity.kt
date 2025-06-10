@@ -26,7 +26,10 @@ import com.example.fe_mangtodo.ui.theme.FEMangTodoTheme
 import com.example.fe_mangtodo.viewmodel.AuthViewModel
 import com.example.fe_mangtodo.viewmodel.CategoryViewModel
 import com.example.fe_mangtodo.viewmodel.TaskViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,9 +44,10 @@ class MainActivity : ComponentActivity() {
                 var showProfile by remember { mutableStateOf(false) }
                 var showCategoryManagement by remember { mutableStateOf(false) }
 
-                val authViewModel = remember { AuthViewModel() }
-                val taskViewModel = remember { TaskViewModel() }
-                val categoryViewModel = remember { CategoryViewModel() }
+                val taskViewModel: TaskViewModel = hiltViewModel()
+                val authViewModel: AuthViewModel = hiltViewModel()
+                val categoryViewModel: CategoryViewModel = hiltViewModel()
+
 
                 if (showSplash) {
                     SplashScreen(onNavigateToMain = { showSplash = false })
