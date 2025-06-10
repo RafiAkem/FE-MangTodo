@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import kotlin.text.format
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -36,13 +37,15 @@ fun TaskCard(
     dueTime: LocalTime,
     status: String,
     categoryName: String?,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
     var isExpanded by remember { mutableStateOf(false) }
 
-    val (targetBackgroundColor, statusText, statusColor) = when (status.lowercase()) {
+    val (targetBackgroundColor, _, _) = when (status.lowercase()) {
         "complete" -> Triple(Color(0xFFE8F5E9), "Completed", Color(0xFF2E7D32))
         "in_progress" -> Triple(Color(0xFFFFF8E1), "In Progress", Color(0xFFF9A825))
         "late" -> Triple(Color(0xFFFFEBEE), "Overdue", Color(0xFFD32F2F))
@@ -53,12 +56,6 @@ fun TaskCard(
         targetValue = targetBackgroundColor,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
         label = "cardBgColor"
-    )
-
-    val animatedStatusColor by animateColorAsState(
-        targetValue = statusColor,
-        animationSpec = tween(durationMillis = 300),
-        label = "statusColorAnim"
     )
 
     val dateFormatter = DateTimeFormatter.ofPattern("dd/MM")
@@ -114,11 +111,9 @@ fun TaskCard(
                         )
                     }
                 }
-                Text(
-                    text = statusText,
-                    color = animatedStatusColor,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold
+                Checkbox(
+                    checked = checked,
+                    onCheckedChange = onCheckedChange
                 )
             }
 

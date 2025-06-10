@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import java.time.LocalDate
 import java.time.LocalTime
+import kotlin.text.get
+import kotlin.text.set
 
 data class TaskItem(
     val id: String,
@@ -33,6 +35,13 @@ fun TaskList(
     onEditTask: (TaskItem) -> Unit,
     onDeleteTask: (TaskItem) -> Unit
 ) {
+    val checkedTasks = remember { mutableStateMapOf<String, Boolean>() }
+    val taskStatuses = remember { mutableStateMapOf<String, String>().apply {
+        tasks.forEach { put(it.id, it.status) }
+    } }
+    val previousStatuses = remember { mutableStateMapOf<String, String>() }
+    var showDialogForTaskId by remember { mutableStateOf<String?>(null) }
+
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -40,9 +49,33 @@ fun TaskList(
     ) {
         items(
             items = tasks,
-            key = { it.id } // Penting agar animasi posisi bekerja
+            key = { it.id }
         ) { task ->
             var visible by remember { mutableStateOf(true) }
+            val checked = checkedTasks[task.id] ?: (task.status == "complete")
+            val status = taskStatuses[task.id] ?: task.status
+
+            if (showDialogForTaskId == task.id) {
+                AlertDialog(
+                    onDismissRequest = { showDialogForTaskId = null },
+                    title = { Text("Confirm Completion") },
+                    text = { Text("Are you sure this task is complete?") },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            previousStatuses[task.id] = status
+                            checkedTasks[task.id] = true
+                            taskStatuses[task.id] = "complete"
+                            showDialogForTaskId = null
+                        }) { Text("Yes") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = {
+                            checkedTasks[task.id] = false
+                            showDialogForTaskId = null
+                        }) { Text("No") }
+                    }
+                )
+            }
 
             AnimatedVisibility(
                 visible = visible,
@@ -54,15 +87,26 @@ fun TaskList(
                     description = task.description,
                     dueDate = task.dueDate,
                     dueTime = task.dueTime,
-                    status = task.status,
+                    status = status,
                     categoryName = task.categoryName,
+                    checked = checked,
+                    onCheckedChange = { isChecked ->
+                        if (isChecked && status != "complete") {
+                            showDialogForTaskId = task.id
+                        } else if (!isChecked && status == "complete") {
+                            // Restore previous status if available, else fallback to original
+                            val prevStatus = previousStatuses[task.id] ?: task.status
+                            checkedTasks[task.id] = false
+                            taskStatuses[task.id] = prevStatus
+                        }
+                    },
                     modifier = Modifier.animateItem(
                         fadeInSpec = null,
                         fadeOutSpec = null
-                    ), // Smooth shift animasi
+                    ),
                     onEditClick = { onEditTask(task) },
                     onDeleteClick = {
-                        visible = false // trigger fade out
+                        visible = false
                         onDeleteTask(task)
                     }
                 )

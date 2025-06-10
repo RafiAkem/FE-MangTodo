@@ -46,6 +46,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.AlertDialog
+import androidx.compose.ui.unit.sp
 import com.example.fe_mangtodo.data.model.Task
 
 @RequiresApi(value = 26)
@@ -94,7 +95,6 @@ fun TodoAppScreen(
         taskViewModel.updateTaskState?.onSuccess {
             snackbarHostState.showSnackbar("Task updated successfully!")
             taskViewModel.resetUpdateTaskState()
-            // Reload tasks after successful update
             taskViewModel.loadUserTasks(userId, selectedDate)
         }?.onFailure {
             snackbarHostState.showSnackbar("Failed to update task: ${it.message}")
@@ -140,43 +140,76 @@ fun TodoAppScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 20.dp) // More breathing room
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp)) // Better spacing from top
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top // Changed to Top alignment
             ) {
-                Column {
+                Column(
+                    modifier = Modifier.weight(1f), // Added weight to take available space
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     Text(
                         text = "MangTodo",
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.headlineLarge.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            letterSpacing = 0.5.sp
+                        )
                     )
                     Text(
                         text = "What are we going to do today, $username?",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            letterSpacing = 0.25.sp
+                        )
                     )
                 }
-                IconButton(onClick = onManageCategories) {
+
+                IconButton(
+                    onClick = onManageCategories,
+                    modifier = Modifier
+                        .padding(start = 8.dp)
+                        .align(Alignment.Top)
+                ) {
                     Icon(
-                        Icons.Default.Menu,
+                        imageVector = Icons.Default.Menu,
                         contentDescription = "Manage Categories",
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(4.dp)
                     )
                 }
             }
-            Text(currentDateFormatted, style = MaterialTheme.typography.titleLarge)
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = currentDateFormatted,
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 0.15.sp
+                )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             DateSelector(onDateSelected = { date -> selectedDate = date })
 
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Task", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(24.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
-            
+            Text(
+                text = "Task",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.1.sp
+                )
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             if (taskViewModel.isLoading || categoryViewModel.isLoading) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
