@@ -7,6 +7,8 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Singleton
 
 @Module
@@ -14,8 +16,18 @@ import javax.inject.Singleton
 object AppModule {
     @Provides
     @Singleton
-    fun provideTaskRepository(dao: TaskDao, apiService: ApiService): TaskRepository {
-        return TaskRepository(dao, apiService)
+    fun provideCoroutineScope(): CoroutineScope {
+        return CoroutineScope(Dispatchers.IO)
+    }
+
+    @Provides
+    @Singleton
+    fun provideTaskRepository(
+        dao: TaskDao, 
+        apiService: ApiService,
+        coroutineScope: CoroutineScope
+    ): TaskRepository {
+        return TaskRepository(dao, apiService, coroutineScope)
     }
 }
 

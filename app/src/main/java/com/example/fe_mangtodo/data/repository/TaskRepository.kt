@@ -8,16 +8,20 @@ import com.example.fe_mangtodo.data.mapper.toTask
 import com.example.fe_mangtodo.data.model.Task
 import com.example.fe_mangtodo.data.model.TaskRequest
 import com.example.fe_mangtodo.data.network.ApiService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class TaskRepository @Inject constructor(
     private val dao: TaskDao,
-    private val apiService: ApiService
+    private val apiService: ApiService,
+    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) {
     private val TAG = "TaskRepository"
 
@@ -62,40 +66,71 @@ class TaskRepository @Inject constructor(
 
             if (taskToReturn == null && response.status == "success") {
                 Log.d(TAG, "Task created on backend but not returned, fetching tasks to get the created task")
-                delay(1000) // Add a small delay to allow backend to process the creation
+                delay(2000) // Initial delay
 
                 var retryCount = 0
-                while (retryCount < 3 && taskToReturn == null) {
+                while (retryCount < 5 && taskToReturn == null) {
                     val tasksResponse = apiService.getUserTasks(request.userId)
+                    Log.d(TAG, "Retrieved ${tasksResponse.data.size} tasks in retry attempt $retryCount")
+                    
+                    tasksResponse.data.forEach { task ->
+                        Log.d(TAG, "Checking task - ID: ${task.id}, Title: ${task.title}, Status: ${task.status}")
+                    }
+                    
                     taskToReturn = tasksResponse.data.find {
                         it.title == request.title &&
-                        it.description == request.description &&
-                        it.dueDate == request.dueDate &&
-                        it.dueTime == request.dueTime &&
                         it.status == request.status &&
                         it.categoryId == request.categoryId
                     }
-
+                    
                     if (taskToReturn == null) {
                         retryCount++
-                        if (retryCount < 3) {
+                        if (retryCount < 5) {
                             Log.d(TAG, "Task not found, retrying... (attempt $retryCount)")
-                            delay(1000) // Wait 1 second between retries
+                            delay(2000)
+                        }
+                    }
+                }
+
+                if (taskToReturn == null) {
+                    Log.d(TAG, "Task not found immediately after creation, but backend reported success. Creating temporary task and triggering sync.")
+                    // Create a temporary task with a placeholder ID
+                    taskToReturn = Task(
+                        id = "temp_${System.currentTimeMillis()}",
+                        title = request.title,
+                        description = request.description,
+                        dueDate = request.dueDate,
+                        dueTime = request.dueTime,
+                        status = request.status,
+                        categoryId = request.categoryId,
+                        userId = request.userId
+                    )
+                    
+                    // Save the temporary task to local database
+                    val entity = taskToReturn.toEntity()
+                    dao.insertTask(entity)
+                    
+                    // Trigger a sync in the background
+                    coroutineScope.launch {
+                        try {
+                            syncTasks(request.userId)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error during background sync: ${e.message}")
                         }
                     }
                 }
             }
 
             if (taskToReturn != null) {
-                Log.d(TAG, "Task successfully retrieved from API or backend: $taskToReturn")
+                Log.d(TAG, "Task successfully retrieved or created: $taskToReturn")
                 val entity = taskToReturn.toEntity()
                 Log.d(TAG, "Converted to entity: $entity")
                 dao.insertTask(entity)
                 Log.d(TAG, "Task saved to local database")
                 return taskToReturn
             } else {
-                Log.e(TAG, "Failed to create task: Could not retrieve from backend after multiple attempts or API returned null task object")
-                throw Exception("Failed to create task: Could not retrieve from backend.")
+                Log.e(TAG, "Failed to create task: Backend did not return success status")
+                throw Exception("Failed to create task: Backend did not return success status.")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error creating task: ${e.message}")
@@ -116,33 +151,65 @@ class TaskRepository @Inject constructor(
 
             if (taskToReturn == null && response.status == "success") {
                 Log.d(TAG, "Task updated on backend but not returned, fetching updated task")
-                delay(1000) // Add a small delay to allow backend to process the update
+                delay(2000) // Initial delay
                 
                 var retryCount = 0
-                while (retryCount < 3 && taskToReturn == null) {
+                while (retryCount < 5 && taskToReturn == null) {
                     val tasksResponse = apiService.getUserTasks(request.userId)
+                    Log.d(TAG, "Retrieved ${tasksResponse.data.size} tasks in retry attempt $retryCount")
+                    
+                    tasksResponse.data.forEach { task ->
+                        Log.d(TAG, "Checking task - ID: ${task.id}, Title: ${task.title}, Status: ${task.status}")
+                    }
+                    
                     taskToReturn = tasksResponse.data.find { 
                         it.id == taskId && 
                         it.title == request.title && 
-                        it.description == request.description && 
-                        it.dueDate == request.dueDate && 
-                        it.dueTime == request.dueTime &&
                         it.status == request.status &&
                         it.categoryId == request.categoryId
                     }
                     
                     if (taskToReturn == null) {
                         retryCount++
-                        if (retryCount < 3) {
+                        if (retryCount < 5) {
                             Log.d(TAG, "Updated task not found, retrying... (attempt $retryCount)")
-                            delay(1000) // Wait 1 second between retries
+                            delay(2000)
+                        }
+                    }
+                }
+
+                if (taskToReturn == null) {
+                    Log.d(TAG, "Task not found immediately after update, but backend reported success. Creating temporary task and triggering sync.")
+                    // Create a temporary task with the same ID
+                    taskToReturn = Task(
+                        id = taskId,
+                        title = request.title,
+                        description = request.description,
+                        dueDate = request.dueDate,
+                        dueTime = request.dueTime,
+                        status = request.status,
+                        categoryId = request.categoryId,
+                        userId = request.userId
+                    )
+                    
+                    // Update the task in local database
+                    val entity = taskToReturn.toEntity()
+                    dao.deleteById(taskId) // Delete old version first
+                    dao.insertTask(entity)
+                    
+                    // Trigger a sync in the background
+                    coroutineScope.launch {
+                        try {
+                            syncTasks(request.userId)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error during background sync: ${e.message}")
                         }
                     }
                 }
             }
 
             if (taskToReturn != null) {
-                Log.d(TAG, "Task successfully retrieved from API or backend after update: $taskToReturn")
+                Log.d(TAG, "Task successfully retrieved or updated: $taskToReturn")
                 // Delete the old task first to prevent duplicates
                 dao.deleteById(taskId)
                 val entity = taskToReturn.toEntity()
@@ -151,8 +218,8 @@ class TaskRepository @Inject constructor(
                 Log.d(TAG, "Task saved to local database")
                 return taskToReturn
             } else {
-                Log.e(TAG, "Failed to update task: Could not retrieve from backend after multiple attempts or API returned null task object")
-                throw Exception("Failed to update task: Could not retrieve from backend.")
+                Log.e(TAG, "Failed to update task: Backend did not return success status")
+                throw Exception("Failed to update task: Backend did not return success status.")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error updating task: ${e.message}")
