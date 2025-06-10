@@ -42,7 +42,6 @@ fun TaskList(
     } }
     val previousStatuses = remember { mutableStateMapOf<String, String>() }
     var showDialogForTaskId by remember { mutableStateOf<String?>(null) }
-    var showDeleteDialogForTaskId by remember { mutableStateOf<String?>(null) }
 
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
@@ -80,30 +79,6 @@ fun TaskList(
                 )
             }
 
-            if (showDeleteDialogForTaskId == task.id) {
-                AlertDialog(
-                    onDismissRequest = { 
-                        showDeleteDialogForTaskId = null
-                        visible = true
-                    },
-                    title = { Text("Delete Task") },
-                    text = { Text("Are you sure you want to delete this task?") },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            visible = false
-                            onDeleteTask(task)
-                            showDeleteDialogForTaskId = null
-                        }) { Text("Delete") }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { 
-                            showDeleteDialogForTaskId = null
-                            visible = true
-                        }) { Text("Cancel") }
-                    }
-                )
-            }
-
             AnimatedVisibility(
                 visible = visible,
                 enter = fadeIn(),
@@ -133,9 +108,7 @@ fun TaskList(
                         fadeOutSpec = null
                     ),
                     onEditClick = { onEditTask(task) },
-                    onDeleteClick = {
-                        showDeleteDialogForTaskId = task.id
-                    },
+                    onDeleteClick = { onDeleteTask(task) },
                     onStatusChange = { newStatus ->
                         if (newStatus == "complete") {
                             showDialogForTaskId = task.id
