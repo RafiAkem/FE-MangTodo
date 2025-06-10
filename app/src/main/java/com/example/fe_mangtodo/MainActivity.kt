@@ -33,6 +33,8 @@ class MainActivity : ComponentActivity() {
                 var showAddTask by remember { mutableStateOf(false) }
                 var showProfile by remember { mutableStateOf(false) }
                 var showCategoryManagement by remember { mutableStateOf(false) }
+                var showEditProfile by remember { mutableStateOf(false) }
+                var showChangePassword by remember { mutableStateOf(false) }
 
                 var isNavigatingForward by remember { mutableStateOf(true) }
 
@@ -45,9 +47,11 @@ class MainActivity : ComponentActivity() {
                 } else {
                     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                         val targetScreen = when {
-                            showCategoryManagement -> "category"
-                            showProfile -> "profile"
+                            showEditProfile -> "editProfile"
+                            showChangePassword -> "changePassword"
                             showAddTask -> "addtask"
+                            showProfile -> "profile"
+                            showCategoryManagement -> "category"
                             isAuthenticated -> "home"
                             showLogin -> "login"
                             else -> "register"
@@ -57,92 +61,20 @@ class MainActivity : ComponentActivity() {
                             targetState = targetScreen,
                             transitionSpec = {
                                 when (targetState) {
-                                    "category" -> slideInHorizontally(
-                                        animationSpec = tween(300)
-                                    ) { fullWidth -> fullWidth } + fadeIn() with
-                                            slideOutHorizontally(animationSpec = tween(300)) { fullWidth -> -fullWidth } + fadeOut()
-
-                                    "home" -> {
+                                    "addtask" -> fadeIn(animationSpec = tween(300)) with fadeOut(animationSpec = tween(300))
+                                    else -> {
                                         if (isNavigatingForward) {
-                                            slideInHorizontally(
-                                                animationSpec = tween(300)
-                                            ) { fullWidth -> fullWidth } + fadeIn() with
+                                            slideInHorizontally(animationSpec = tween(300)) { fullWidth -> fullWidth } + fadeIn() with
                                                     slideOutHorizontally(animationSpec = tween(300)) { fullWidth -> -fullWidth } + fadeOut()
                                         } else {
-                                            slideInHorizontally(
-                                                animationSpec = tween(300)
-                                            ) { fullWidth -> -fullWidth } + fadeIn() with
+                                            slideInHorizontally(animationSpec = tween(300)) { fullWidth -> -fullWidth } + fadeIn() with
                                                     slideOutHorizontally(animationSpec = tween(300)) { fullWidth -> fullWidth } + fadeOut()
                                         }
                                     }
-
-                                    "addtask" -> fadeIn(animationSpec = tween(300)) with fadeOut(animationSpec = tween(300))
-
-                                    else -> fadeIn(animationSpec = tween(300)) with fadeOut(animationSpec = tween(300))
                                 }.using(SizeTransform(clip = false))
                             }
-                        ) { target ->
-                            when (target) {
-                                "category" -> {
-                                    val userId = authViewModel.currentUserId
-                                    if (userId != null) {
-                                        CategoryManagementScreen(
-                                            onNavigateBack = {
-                                                isNavigatingForward = false
-                                                showCategoryManagement = false
-                                            },
-                                            userId = userId,
-                                            categoryViewModel = categoryViewModel
-                                        )
-                                    } else {
-                                        showCategoryManagement = false
-                                    }
-                                }
-
-                                "profile" -> {
-                                    ProfileScreen(
-                                        viewModel = authViewModel,
-                                        username = authViewModel.currentUsername,
-                                        onNavigateBack = {
-                                            isNavigatingForward = false
-                                            showProfile = false
-                                        },
-                                        onHomeClick = {
-                                            isNavigatingForward = false
-                                            showProfile = false
-                                        },
-                                        onProfileClick = { /* Already on profile */ },
-                                        onAddClick = {
-                                            isNavigatingForward = true
-                                            showProfile = false
-                                            taskViewModel.resetCreateTaskState()
-                                            showAddTask = true
-                                        },
-                                        onLogout = {
-                                            isAuthenticated = false
-                                            showLogin = true
-                                            showProfile = false
-                                            authViewModel.logout()
-                                        }
-                                    )
-                                }
-
-                                "addtask" -> {
-                                    AddTaskScreen(
-                                        userId = authViewModel.currentUserId ?: "",
-                                        onNavigateBack = {
-                                            isNavigatingForward = false
-                                            showAddTask = false
-                                        },
-                                        onTaskAdded = {
-                                            isNavigatingForward = false
-                                            showAddTask = false
-                                        },
-                                        taskViewModel = taskViewModel,
-                                        categoryViewModel = categoryViewModel
-                                    )
-                                }
-
+                        ) { screen ->
+                            when (screen) {
                                 "home" -> {
                                     TodoAppScreen(
                                         onAddTask = {
@@ -171,6 +103,93 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
 
+                                "addtask" -> {
+                                    AddTaskScreen(
+                                        userId = authViewModel.currentUserId ?: "",
+                                        onNavigateBack = {
+                                            isNavigatingForward = false
+                                            showAddTask = false
+                                        },
+                                        onTaskAdded = {
+                                            isNavigatingForward = false
+                                            showAddTask = false
+                                        },
+                                        taskViewModel = taskViewModel,
+                                        categoryViewModel = categoryViewModel
+                                    )
+                                }
+
+                                "profile" -> {
+                                    ProfileScreen(
+                                        viewModel = authViewModel,
+                                        username = authViewModel.currentUsername,
+                                        onNavigateBack = {
+                                            isNavigatingForward = false
+                                            showProfile = false
+                                        },
+                                        onHomeClick = {
+                                            isNavigatingForward = false
+                                            showProfile = false
+                                        },
+                                        onProfileClick = { },
+                                        onAddClick = {
+                                            isNavigatingForward = true
+                                            showProfile = false
+                                            taskViewModel.resetCreateTaskState()
+                                            showAddTask = true
+                                        },
+                                        onLogout = {
+                                            isAuthenticated = false
+                                            showLogin = true
+                                            showProfile = false
+                                            authViewModel.logout()
+                                        },
+                                        onEditProfile = {
+                                            isNavigatingForward = true
+                                            showProfile = false
+                                            showEditProfile = true
+                                        },
+                                        onChangePassword = {
+                                            isNavigatingForward = true
+                                            showProfile = false
+                                            showChangePassword = true
+                                        }
+                                    )
+                                }
+
+                                "editProfile" -> {
+                                    EditProfileScreen(
+                                        viewModel = authViewModel,
+                                        onBack = {
+                                            isNavigatingForward = false
+                                            showEditProfile = false
+                                            showProfile = true
+                                        }
+                                    )
+                                }
+
+                                "changePassword" -> {
+                                    ChangePasswordScreen(
+                                        viewModel = authViewModel,
+                                        onBack = {
+                                            isNavigatingForward = false
+                                            showChangePassword = false
+                                            showProfile = true
+                                        }
+                                    )
+                                }
+
+                                "category" -> {
+                                    CategoryManagementScreen(
+                                        userId = authViewModel.currentUserId ?: "",
+                                        onNavigateBack = {
+                                            isNavigatingForward = false
+                                            showCategoryManagement = false
+                                        },
+                                        categoryViewModel = categoryViewModel
+                                    )
+                                }
+
                                 "login" -> {
                                     LoginScreen(
                                         viewModel = authViewModel,
@@ -183,7 +202,7 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
 
-                                else -> {
+                                "register" -> {
                                     RegisterScreen(
                                         viewModel = authViewModel,
                                         onRegistered = {
