@@ -99,6 +99,7 @@ fun TaskList(
                             val prevStatus = previousStatuses[task.id] ?: task.status
                             checkedTasks[task.id] = false
                             taskStatuses[task.id] = prevStatus
+                            onStatusChange(task, prevStatus)
                         }
                     },
                     modifier = Modifier.animateItem(
@@ -111,12 +112,12 @@ fun TaskList(
                         onDeleteTask(task)
                     },
                     onStatusChange = { newStatus ->
-                        taskStatuses[task.id] = newStatus
-                        onStatusChange(task, newStatus)
                         if (newStatus == "complete") {
                             showDialogForTaskId = task.id
                         } else {
+                            taskStatuses[task.id] = newStatus
                             checkedTasks[task.id] = false
+                            onStatusChange(task, newStatus)
                         }
                     }
                 )
