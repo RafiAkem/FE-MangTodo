@@ -41,7 +41,8 @@ fun TaskCard(
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onStatusChange: (String) -> Unit
 ) {
     var isExpanded by remember { mutableStateOf(false) }
 
@@ -113,7 +114,11 @@ fun TaskCard(
                 }
                 Checkbox(
                     checked = checked,
-                    onCheckedChange = onCheckedChange
+                    onCheckedChange = { isChecked ->
+                        onCheckedChange(isChecked)
+                        val newStatus = if (isChecked) "complete" else "in_progress"
+                        onStatusChange(newStatus)
+                    }
                 )
             }
 
@@ -147,3 +152,4 @@ fun TaskCard(
         }
     }
 }
+

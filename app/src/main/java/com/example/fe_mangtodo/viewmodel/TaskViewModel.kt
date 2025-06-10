@@ -61,9 +61,10 @@ class TaskViewModel : ViewModel() {
         dueDate: String,
         dueTime: String,
         categoryId: String,
-        userId: String
+        userId: String,
+        status: String = "in_progress" // Default status
     ) {
-        val request = TaskRequest(title, description, dueDate, dueTime, categoryId, userId)
+        val request = TaskRequest(title, description, dueDate, dueTime, categoryId, userId, status)
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.api.createTask(request)
@@ -83,9 +84,10 @@ class TaskViewModel : ViewModel() {
         dueDate: String,
         dueTime: String,
         categoryId: String,
-        userId: String
+        userId: String,
+        status: String = "in_progress" // Default status
     ) {
-        val request = TaskRequest(title, description, dueDate, dueTime, categoryId, userId)
+        val request = TaskRequest(title, description, dueDate, dueTime, categoryId, userId, status)
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.api.updateTask(taskId, request)
@@ -109,6 +111,28 @@ class TaskViewModel : ViewModel() {
             } catch (e: Exception) {
                 println("Error deleting task: ${e.message}")
                 deleteTaskState = Result.failure(e)
+            }
+        }
+    }
+
+
+    fun updateTaskStatus(task: Task, newStatus: String, userId: String) {
+        val request = TaskRequest(
+            title = task.title,
+            description = task.description,
+            dueDate = task.dueDate,
+            dueTime = task.dueTime,
+            categoryId = task.categoryId,
+            userId = userId,
+            status = newStatus
+        )
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.api.updateTask(task.id, request)
+                updateTaskState = Result.success(response)
+                loadUserTasks(userId)
+            } catch (e: Exception) {
+                updateTaskState = Result.failure(e)
             }
         }
     }

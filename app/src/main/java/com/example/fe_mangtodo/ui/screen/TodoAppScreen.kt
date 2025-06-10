@@ -231,6 +231,12 @@ fun TodoAppScreen(
                     onDeleteTask = { task ->
                         taskToDelete = task
                         showDeleteConfirmationDialog = true
+                    },
+                    onStatusChange = { taskItem, newStatus ->
+                        val originalTask = taskViewModel.tasks.find { it.id == taskItem.id }
+                        if (originalTask != null) {
+                            taskViewModel.updateTaskStatus(originalTask, newStatus, userId)
+                        }
                     }
                 )
             }

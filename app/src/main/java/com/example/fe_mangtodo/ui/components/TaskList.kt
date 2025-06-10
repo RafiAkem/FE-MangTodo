@@ -33,7 +33,8 @@ fun TaskList(
     tasks: List<TaskItem>,
     modifier: Modifier = Modifier,
     onEditTask: (TaskItem) -> Unit,
-    onDeleteTask: (TaskItem) -> Unit
+    onDeleteTask: (TaskItem) -> Unit,
+    onStatusChange: (TaskItem, String) -> Unit
 ) {
     val checkedTasks = remember { mutableStateMapOf<String, Boolean>() }
     val taskStatuses = remember { mutableStateMapOf<String, String>().apply {
@@ -108,6 +109,15 @@ fun TaskList(
                     onDeleteClick = {
                         visible = false
                         onDeleteTask(task)
+                    },
+                    onStatusChange = { newStatus ->
+                        taskStatuses[task.id] = newStatus
+                        onStatusChange(task, newStatus)
+                        if (newStatus == "complete") {
+                            showDialogForTaskId = task.id
+                        } else {
+                            checkedTasks[task.id] = false
+                        }
                     }
                 )
             }
