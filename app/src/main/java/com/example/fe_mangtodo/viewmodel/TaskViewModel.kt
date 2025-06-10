@@ -10,11 +10,19 @@ import androidx.lifecycle.viewModelScope
 import com.example.fe_mangtodo.data.model.Task
 import com.example.fe_mangtodo.data.model.TaskRequest
 import com.example.fe_mangtodo.data.model.TaskResponse
+import com.example.fe_mangtodo.data.network.ApiService
 import com.example.fe_mangtodo.data.network.RetrofitClient
+import com.example.fe_mangtodo.data.repository.TaskRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import javax.inject.Inject
 
-class TaskViewModel : ViewModel() {
+@HiltViewModel
+class TaskViewModel @Inject constructor(
+    private val apiService: ApiService,
+    private val repository: TaskRepository
+): ViewModel() {
     var tasks by mutableStateOf<List<Task>>(emptyList())
         private set
 

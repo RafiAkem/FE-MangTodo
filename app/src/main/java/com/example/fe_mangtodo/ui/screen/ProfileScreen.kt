@@ -18,14 +18,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,13 +29,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,13 +43,9 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.fe_mangtodo.ui.icons.Chevron_right
 import com.example.fe_mangtodo.viewmodel.AuthViewModel
-import com.example.fe_mangtodo.ui.screen.EditProfileScreen
-import com.example.fe_mangtodo.ui.screen.ChangePasswordScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -73,13 +62,7 @@ fun ProfileScreen(
 ) {
     var showEditProfile by remember { mutableStateOf(false) }
     var showChangePassword by remember { mutableStateOf(false) }
-    var isEditingProfile by remember { mutableStateOf(false) }
-    var isChangingPassword by remember { mutableStateOf(false) }
-    var newUsername by remember { mutableStateOf(username) }
-    var currentPassword by remember { mutableStateOf("") }
-    var newPassword by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-    val userId = viewModel.currentUserId ?: ""
+    viewModel.currentUserId ?: ""
 
     if (showEditProfile) {
         EditProfileScreen(
@@ -123,7 +106,7 @@ fun ProfileScreen(
                 .background(MaterialTheme.colorScheme.background),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Modern Profile Header Section
+            //Profile Header Section
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -167,7 +150,7 @@ fun ProfileScreen(
                 }
             }
 
-            // Account Settings Section (modern, clean, no blue)
+            // Account Settings Section
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
