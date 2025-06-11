@@ -13,12 +13,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import com.example.fe_mangtodo.ui.icons.Sort
 import androidx.compose.material3.Icon
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.fe_mangtodo.ui.components.DateSelector
 import com.example.fe_mangtodo.ui.components.TaskItem
@@ -46,7 +50,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.AlertDialog
-import androidx.compose.ui.unit.sp
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.SwipeRefreshState
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.example.fe_mangtodo.data.model.Task
 
 @RequiresApi(value = 26)
@@ -75,6 +81,11 @@ fun TodoAppScreen(
     var showEditTask by remember { mutableStateOf(false) }
     var taskToEdit by remember { mutableStateOf<Task?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
+    var showSortMenu by remember { mutableStateOf(false) }
+    var sortOption by remember { mutableStateOf("Due Time") }
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
 
     LaunchedEffect(selectedDate) {
         taskViewModel.loadUserTasks(userId, selectedDate)
@@ -117,6 +128,25 @@ fun TodoAppScreen(
         )
     }
 
+    val sortedTasks = remember(tasks, sortOption) {
+        when (sortOption) {
+            "Due Time" -> tasks.sortedBy { it.dueTime }
+            "Latest Created" -> tasks.sortedByDescending { it.id }
+            else -> tasks
+        }.let { sortedTasks ->
+            // Move completed tasks to the bottom
+            sortedTasks.sortedBy { it.status == "completed" }
+        }
+    }
+
+    LaunchedEffect(swipeRefreshState.isRefreshing) {
+        if (swipeRefreshState.isRefreshing) {
+            taskViewModel.loadUserTasks(userId, selectedDate)
+            categoryViewModel.loadUserCategories(userId)
+            isRefreshing = false
+        }
+    }
+
     Scaffold(
         modifier = modifier,
         bottomBar = {
@@ -136,109 +166,152 @@ fun TodoAppScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
-        Column(
+        SwipeRefresh(
+            state = swipeRefreshState,
+            onRefresh = {
+                isRefreshing = true
+            },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 20.dp) // More breathing room
         ) {
-            Spacer(modifier = Modifier.height(32.dp)) // Better spacing from top
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top // Changed to Top alignment
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp)
             ) {
-                Column(
-                    modifier = Modifier.weight(1f), // Added weight to take available space
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                Spacer(modifier = Modifier.height(32.dp)) // Better spacing from top
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Top // Changed to Top alignment
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f), // Added weight to take available space
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "MangTodo",
+                            style = MaterialTheme.typography.headlineLarge.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = 0.5.sp
+                            )
+                        )
+                        Text(
+                            text = "What are we going to do today, $username?",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                letterSpacing = 0.25.sp
+                            )
+                        )
+                    }
+
+                    IconButton(
+                        onClick = onManageCategories,
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .align(Alignment.Top)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = "Manage Categories",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(4.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = currentDateFormatted,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Medium,
+                        letterSpacing = 0.15.sp
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                DateSelector(onDateSelected = { date -> selectedDate = date })
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "MangTodo",
-                        style = MaterialTheme.typography.headlineLarge.copy(
-                            fontWeight = FontWeight.ExtraBold,
-                            letterSpacing = 0.5.sp
+                        text = "Task",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = 0.1.sp
                         )
                     )
-                    Text(
-                        text = "What are we going to do today, $username?",
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            letterSpacing = 0.25.sp
-                        )
-                    )
-                }
 
-                IconButton(
-                    onClick = onManageCategories,
-                    modifier = Modifier
-                        .padding(start = 8.dp)
-                        .align(Alignment.Top)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Menu,
-                        contentDescription = "Manage Categories",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(4.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                text = currentDateFormatted,
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Medium,
-                    letterSpacing = 0.15.sp
-                )
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            DateSelector(onDateSelected = { date -> selectedDate = date })
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                text = "Task",
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.1.sp
-                )
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            if (taskViewModel.isLoading || categoryViewModel.isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                TaskList(
-                    tasks = tasks,
-                    onEditTask = { taskItem ->
-                        val originalTask = taskViewModel.tasks.find { it.id == taskItem.id }
-                        if (originalTask != null) {
-                            taskViewModel.resetUpdateTaskState()
-                            taskToEdit = originalTask
-                            showEditTask = true
+                    Box {
+                        IconButton(onClick = { showSortMenu = true }) {
+                            Icon(
+                                imageVector = Sort,
+                                contentDescription = "Sort Tasks"
+                            )
                         }
-                    },
-                    onDeleteTask = { task ->
-                        taskToDelete = task
-                        showDeleteConfirmationDialog = true
-                    },
-                    onStatusChange = { taskItem, newStatus ->
-                        val originalTask = taskViewModel.tasks.find { it.id == taskItem.id }
-                        if (originalTask != null) {
-                            taskViewModel.updateTaskStatus(originalTask, newStatus, userId)
+                        DropdownMenu(
+                            expanded = showSortMenu,
+                            onDismissRequest = { showSortMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Due Time") },
+                                onClick = {
+                                    sortOption = "Due Time"
+                                    showSortMenu = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Latest Created") },
+                                onClick = {
+                                    sortOption = "Latest Created"
+                                    showSortMenu = false
+                                }
+                            )
                         }
                     }
-                )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                if (taskViewModel.isLoading || categoryViewModel.isLoading) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    TaskList(
+                        tasks = sortedTasks,
+                        onEditTask = { taskItem ->
+                            val originalTask = taskViewModel.tasks.find { it.id == taskItem.id }
+                            if (originalTask != null) {
+                                taskViewModel.resetUpdateTaskState()
+                                taskToEdit = originalTask
+                                showEditTask = true
+                            }
+                        },
+                        onDeleteTask = { task ->
+                            taskToDelete = task
+                            showDeleteConfirmationDialog = true
+                        },
+                        onStatusChange = { taskItem, newStatus ->
+                            val originalTask = taskViewModel.tasks.find { it.id == taskItem.id }
+                            if (originalTask != null) {
+                                taskViewModel.updateTaskStatus(originalTask, newStatus, userId)
+                            }
+                        }
+                    )
+                }
             }
         }
     }

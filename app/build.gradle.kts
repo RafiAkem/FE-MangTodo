@@ -79,4 +79,5 @@ dependencies {
 // Compose Hilt Navigation
     implementation ("androidx.hilt:hilt-navigation-compose:1.2.0")
 
+    implementation("com.google.accompanist:accompanist-swiperefresh:0.33.0-alpha") // Or latest version
 }
