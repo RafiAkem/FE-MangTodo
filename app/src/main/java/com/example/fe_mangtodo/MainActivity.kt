@@ -190,29 +190,30 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
 
-                                "login" -> {
-                                    LoginScreen(
-                                        viewModel = authViewModel,
-                                        onSuccess = {
-                                            isAuthenticated = true
-                                        },
-                                        onNavigateToRegister = {
-                                            showLogin = false
-                                        }
-                                    )
-                                }
+                                "login" -> LoginScreen(
+                                    viewModel = authViewModel,
+                                    onSuccess = {
+                                        isAuthenticated = true
+                                    },
+                                    onNavigateToRegister = {
+                                        isNavigatingForward = true // ke kiri
+                                        showLogin = false
+                                    }
+                                )
 
-                                "register" -> {
-                                    RegisterScreen(
-                                        viewModel = authViewModel,
-                                        onRegistered = {
-                                            showLogin = true
-                                        },
-                                        onNavigateToLogin = {
-                                            showLogin = true
-                                        }
-                                    )
-                                }
+
+                                "register" -> RegisterScreen(
+                                    viewModel = authViewModel,
+                                    onRegistered = {
+                                        isNavigatingForward = false // ke kanan
+                                        showLogin = true
+                                    },
+                                    onNavigateToLogin = {
+                                        isNavigatingForward = false // ke kanan
+                                        showLogin = true
+                                    }
+                                )
+                            }
                             }
                         }
                     }
@@ -220,4 +221,3 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
