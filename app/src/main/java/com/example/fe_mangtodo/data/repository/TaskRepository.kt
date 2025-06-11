@@ -29,10 +29,23 @@ class TaskRepository @Inject constructor(
 
     fun getTasks(userId: String): Flow<List<Task>> {
         Log.d(TAG, "Getting tasks from local database for user: $userId")
-        return dao.getAllTasks(userId).map { entities ->
+        // First return local data immediately
+        val localFlow = dao.getAllTasks(userId).map { entities ->
             Log.d(TAG, "Retrieved ${entities.size} tasks from local database")
             entities.map { it.toTask() }
         }
+
+        // Then attempt to sync in the background
+        coroutineScope.launch {
+            try {
+                syncTasks(userId)
+            } catch (e: Exception) {
+                Log.e(TAG, "Background sync failed: ${e.message}")
+                // Don't throw the error since we're in background
+            }
+        }
+
+        return localFlow
     }
 
     suspend fun syncTasks(userId: String) {
@@ -54,7 +67,7 @@ class TaskRepository @Inject constructor(
         } catch (e: Exception) {
             Log.e(TAG, "Error syncing tasks: ${e.message}")
             Log.e(TAG, "Stack trace: ${e.stackTraceToString()}")
-            throw e
+            // Don't throw the error, just log it and continue with local data
         }
     }
 
