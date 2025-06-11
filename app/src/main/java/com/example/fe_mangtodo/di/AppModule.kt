@@ -1,14 +1,18 @@
 package com.example.fe_mangtodo.di
 
-import android.content.Context
-import androidx.room.Room
-import com.example.fe_mangtodo.data.local.AppDatabase
-import com.example.fe_mangtodo.data.local.TaskDao
+import com.example.fe_mangtodo.data.local.dao.TaskDao
+import com.example.fe_mangtodo.data.local.dao.CategoryDao
+import com.example.fe_mangtodo.data.repository.TaskRepository
+import com.example.fe_mangtodo.data.repository.CategoryRepository
+import com.example.fe_mangtodo.data.network.ApiService
+import com.example.fe_mangtodo.data.local.dao.UserDao
+import com.example.fe_mangtodo.data.repository.AuthRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Singleton
 
 @Module
@@ -16,14 +20,37 @@ import javax.inject.Singleton
 object AppModule {
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
-        Room.databaseBuilder(
-            context,
-            AppDatabase::class.java,
-            "mangtodo_db"
-        ).build()
+    fun provideCoroutineScope(): CoroutineScope {
+        return CoroutineScope(Dispatchers.IO)
+    }
 
     @Provides
-    fun provideTaskDao(db: AppDatabase): TaskDao = db.taskDao()
+    @Singleton
+    fun provideTaskRepository(
+        dao: TaskDao, 
+        apiService: ApiService,
+        coroutineScope: CoroutineScope
+    ): TaskRepository {
+        return TaskRepository(dao, apiService, coroutineScope)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCategoryRepository(
+        dao: CategoryDao,
+        apiService: ApiService,
+        coroutineScope: CoroutineScope
+    ): CategoryRepository {
+        return CategoryRepository(dao, apiService, coroutineScope)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthRepository(
+        dao: UserDao,
+        apiService: ApiService
+    ): AuthRepository {
+        return AuthRepository(dao, apiService)
+    }
 }
 
