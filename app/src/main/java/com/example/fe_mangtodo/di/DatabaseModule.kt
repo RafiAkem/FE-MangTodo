@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.example.fe_mangtodo.data.local.db.AppDatabase
 import com.example.fe_mangtodo.data.local.dao.TaskDao
+import com.example.fe_mangtodo.data.local.dao.CategoryDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,6 +16,8 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
 
+    private const val DATABASE_NAME = "mangtodo_database"
+
     @Provides
     @Singleton
     fun provideAppDatabase(
@@ -23,13 +26,21 @@ object DatabaseModule {
         return Room.databaseBuilder(
             context,
             AppDatabase::class.java,
-            "mangtodo_database"
-        ).build()
+            DATABASE_NAME
+        )
+        .fallbackToDestructiveMigration()
+        .build()
     }
 
     @Provides
     @Singleton
     fun provideTaskDao(database: AppDatabase): TaskDao {
         return database.taskDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideCategoryDao(database: AppDatabase): CategoryDao {
+        return database.categoryDao()
     }
 } 

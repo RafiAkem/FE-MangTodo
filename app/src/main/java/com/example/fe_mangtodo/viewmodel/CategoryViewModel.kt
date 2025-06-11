@@ -9,10 +9,16 @@ import androidx.lifecycle.viewModelScope
 import com.example.fe_mangtodo.data.model.Category
 import com.example.fe_mangtodo.data.model.CategoryRequest
 import com.example.fe_mangtodo.data.model.CategoryResponse
-import com.example.fe_mangtodo.data.network.RetrofitClient
+import com.example.fe_mangtodo.data.repository.CategoryRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class CategoryViewModel : ViewModel() {
+@HiltViewModel
+class CategoryViewModel @Inject constructor(
+    private val repository: CategoryRepository
+) : ViewModel() {
     private val TAG = "CategoryViewModel"
 
     var categories by mutableStateOf<List<Category>>(emptyList())
@@ -36,14 +42,19 @@ class CategoryViewModel : ViewModel() {
             isLoading = true
             try {
                 Log.d(TAG, "Loading categories for user: $userId")
-                val response = RetrofitClient.api.getUserCategories(userId)
-                categories = response.data
-                Log.d(TAG, "Categories loaded: ${categories.size}")
+                // First sync with remote
+                repository.syncCategories(userId)
+                
+                // Then observe local data
+                repository.getCategories(userId).collect { allCategories ->
+                    categories = allCategories
+                    Log.d(TAG, "Categories loaded: ${categories.size}")
+                    isLoading = false
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "Error loading categories: ${e.message}")
                 Log.e(TAG, "Stack trace: ${e.stackTraceToString()}")
                 categories = emptyList()
-            } finally {
                 isLoading = false
             }
         }
@@ -55,17 +66,20 @@ class CategoryViewModel : ViewModel() {
             return
         }
         viewModelScope.launch {
+            isLoading = true
             try {
                 Log.d(TAG, "Creating category: $name for user: $userId")
-                val response = RetrofitClient.api.createCategory(CategoryRequest(name, userId))
-                createCategoryState = Result.success(response)
-                Log.d(TAG, "Category created successfully: ${response.message}")
+                val category = repository.createCategory(CategoryRequest(name, userId))
+                createCategoryState = Result.success(CategoryResponse("success", "Category created", category))
+                Log.d(TAG, "Category created successfully")
                 // Reload categories after creating a new one
                 loadUserCategories(userId)
             } catch (e: Exception) {
                 Log.e(TAG, "Error creating category: ${e.message}")
                 Log.e(TAG, "Stack trace: ${e.stackTraceToString()}")
                 createCategoryState = Result.failure(e)
+            } finally {
+                isLoading = false
             }
         }
     }
@@ -76,9 +90,10 @@ class CategoryViewModel : ViewModel() {
             return
         }
         viewModelScope.launch {
+            isLoading = true
             try {
                 Log.d(TAG, "Deleting category: $categoryId for user: $userId")
-                RetrofitClient.api.deleteCategory(categoryId, userId)
+                repository.deleteCategory(categoryId, userId)
                 deleteCategoryState = Result.success(Unit)
                 Log.d(TAG, "Category deleted successfully")
                 // Reload categories after deleting one
@@ -87,6 +102,8 @@ class CategoryViewModel : ViewModel() {
                 Log.e(TAG, "Error deleting category: ${e.message}")
                 Log.e(TAG, "Stack trace: ${e.stackTraceToString()}")
                 deleteCategoryState = Result.failure(e)
+            } finally {
+                isLoading = false
             }
         }
     }

@@ -1,7 +1,9 @@
 package com.example.fe_mangtodo.di
 
 import com.example.fe_mangtodo.data.local.dao.TaskDao
+import com.example.fe_mangtodo.data.local.dao.CategoryDao
 import com.example.fe_mangtodo.data.repository.TaskRepository
+import com.example.fe_mangtodo.data.repository.CategoryRepository
 import com.example.fe_mangtodo.data.network.ApiService
 import dagger.Module
 import dagger.Provides
@@ -28,6 +30,16 @@ object AppModule {
         coroutineScope: CoroutineScope
     ): TaskRepository {
         return TaskRepository(dao, apiService, coroutineScope)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCategoryRepository(
+        dao: CategoryDao,
+        apiService: ApiService,
+        coroutineScope: CoroutineScope
+    ): CategoryRepository {
+        return CategoryRepository(dao, apiService, coroutineScope)
     }
 }
 
