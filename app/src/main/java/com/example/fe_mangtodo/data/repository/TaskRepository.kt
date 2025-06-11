@@ -74,27 +74,46 @@ class TaskRepository @Inject constructor(
     suspend fun createTask(request: TaskRequest): Task {
         try {
             Log.d(TAG, "Creating task with request: $request")
-            val response = apiService.createTask(request)
-            Log.d(TAG, "API Response: $response")
+            
+            // Create a temporary task with a unique ID
+            val tempTask = Task(
+                id = "${TEMP_TASK_PREFIX}${System.currentTimeMillis()}",
+                title = request.title,
+                description = request.description,
+                dueDate = request.dueDate,
+                dueTime = request.dueTime,
+                status = request.status,
+                categoryId = request.categoryId,
+                userId = request.userId
+            )
+            
+            // Save to local database first
+            Log.d(TAG, "Saving task to local database")
+            dao.insertTask(tempTask.toEntity())
+            
+            // Try to sync with remote
+            try {
+                Log.d(TAG, "Attempting to sync task with remote")
+                val response = apiService.createTask(request)
+                Log.d(TAG, "API Response: $response")
 
-            if (response.status == "success") {
-                Log.d(TAG, "Task created successfully on backend")
-                // Create a task object with the request data
-                val task = Task(
-                    id = "temp_${System.currentTimeMillis()}", // Temporary ID until sync
-                    title = request.title,
-                    description = request.description,
-                    dueDate = request.dueDate,
-                    dueTime = request.dueTime,
-                    status = request.status,
-                    categoryId = request.categoryId,
-                    userId = request.userId
-                )
-                
-                return task
-            } else {
-                Log.e(TAG, "Failed to create task: Backend did not return success status")
-                throw Exception("Failed to create task: Backend did not return success status.")
+                if (response.status == "success" && response.data.task != null) {
+                    Log.d(TAG, "Task created successfully on backend")
+                    // Update local task with the real ID
+                    val realTask = response.data.task
+                    dao.deleteById(tempTask.id) // Remove temporary task
+                    dao.insertTask(realTask.toEntity()) // Insert real task
+                    return realTask
+                } else {
+                    Log.e(TAG, "Failed to create task: Backend did not return success status")
+                    // Keep the temporary task in local database
+                    return tempTask
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error syncing task with remote: ${e.message}")
+                Log.e(TAG, "Stack trace: ${e.stackTraceToString()}")
+                // Keep the temporary task in local database
+                return tempTask
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error creating task: ${e.message}")
@@ -107,33 +126,45 @@ class TaskRepository @Inject constructor(
         try {
             Log.d(TAG, "Updating task: $taskId with request: $request")
             
-            val response = apiService.updateTask(taskId, request)
-            Log.d(TAG, "API Response for update: $response")
+            // Create updated task object
+            val updatedTask = Task(
+                id = taskId,
+                title = request.title,
+                description = request.description,
+                dueDate = request.dueDate,
+                dueTime = request.dueTime,
+                status = request.status,
+                categoryId = request.categoryId,
+                userId = request.userId
+            )
+            
+            // Update in local DB first
+            val entity = updatedTask.toEntity()
+            dao.deleteById(taskId) // Delete old version first
+            dao.insertTask(entity)
+            Log.d(TAG, "Task updated in local database")
+            
+            // Try to sync with remote
+            try {
+                val response = apiService.updateTask(taskId, request)
+                Log.d(TAG, "API Response for update: $response")
 
-            if (response.status == "success") {
-                Log.d(TAG, "Task updated successfully on backend")
-                // Create updated task object
-                val updatedTask = Task(
-                    id = taskId,
-                    title = request.title,
-                    description = request.description,
-                    dueDate = request.dueDate,
-                    dueTime = request.dueTime,
-                    status = request.status,
-                    categoryId = request.categoryId,
-                    userId = request.userId
-                )
-                
-                // Update in local DB
-                val entity = updatedTask.toEntity()
-                dao.deleteById(taskId) // Delete old version first
-                dao.insertTask(entity)
-                Log.d(TAG, "Task updated in local database")
-                
+                if (response.status == "success" && response.data.task != null) {
+                    Log.d(TAG, "Task updated successfully on backend")
+                    // Update local task with the response data
+                    val realTask = response.data.task
+                    dao.deleteById(taskId)
+                    dao.insertTask(realTask.toEntity())
+                    return realTask
+                } else {
+                    Log.e(TAG, "Failed to update task: Backend did not return success status")
+                    // Keep the local update
+                    return updatedTask
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error syncing task update with remote: ${e.message}")
+                // Keep the local update
                 return updatedTask
-            } else {
-                Log.e(TAG, "Failed to update task: Backend did not return success status")
-                throw Exception("Failed to update task: Backend did not return success status.")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error updating task: ${e.message}")
@@ -146,10 +177,18 @@ class TaskRepository @Inject constructor(
         try {
             Log.d(TAG, "Deleting task: $taskId")
             
-            apiService.deleteTask(taskId, userId)
-            Log.d(TAG, "Task deleted from remote, removing from local database")
+            // Delete from local database first
             dao.deleteById(taskId)
             Log.d(TAG, "Task removed from local database")
+            
+            // Try to sync with remote
+            try {
+                apiService.deleteTask(taskId, userId)
+                Log.d(TAG, "Task deleted from remote")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error syncing task deletion with remote: ${e.message}")
+                // Task is already deleted locally, so we don't need to do anything
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Error deleting task: ${e.message}")
             Log.e(TAG, "Stack trace: ${e.stackTraceToString()}")
