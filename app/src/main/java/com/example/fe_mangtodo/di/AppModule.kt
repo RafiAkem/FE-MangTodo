@@ -5,6 +5,8 @@ import com.example.fe_mangtodo.data.local.dao.CategoryDao
 import com.example.fe_mangtodo.data.repository.TaskRepository
 import com.example.fe_mangtodo.data.repository.CategoryRepository
 import com.example.fe_mangtodo.data.network.ApiService
+import com.example.fe_mangtodo.data.local.dao.UserDao
+import com.example.fe_mangtodo.data.repository.AuthRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -40,6 +42,15 @@ object AppModule {
         coroutineScope: CoroutineScope
     ): CategoryRepository {
         return CategoryRepository(dao, apiService, coroutineScope)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthRepository(
+        dao: UserDao,
+        apiService: ApiService
+    ): AuthRepository {
+        return AuthRepository(dao, apiService)
     }
 }
 

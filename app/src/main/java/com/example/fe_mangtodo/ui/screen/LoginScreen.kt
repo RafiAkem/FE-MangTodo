@@ -260,17 +260,4 @@ fun LoginScreen(
     }
 }
 
-@SuppressLint("ViewModelConstructorInComposable")
-@Preview(showBackground = true)
-@Composable
-fun LoginScreenPreview() {
-    val previewViewModel = AuthViewModel()
-    FEMangTodoTheme {
-        LoginScreen(
-            viewModel = previewViewModel,
-            onSuccess = {},
-            onNavigateToRegister = {}  // Adding the missing parameter
-        )
-    }
-}
 

@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.example.fe_mangtodo.data.local.db.AppDatabase
 import com.example.fe_mangtodo.data.local.dao.TaskDao
 import com.example.fe_mangtodo.data.local.dao.CategoryDao
+import com.example.fe_mangtodo.data.local.dao.UserDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -42,5 +43,11 @@ object DatabaseModule {
     @Singleton
     fun provideCategoryDao(database: AppDatabase): CategoryDao {
         return database.categoryDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideUserDao(database: AppDatabase): UserDao {
+        return database.userDao()
     }
 } 
